@@ -274,7 +274,7 @@ const Contact = () => {
                   className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
                 >
                   <Linkedin className="h-4 w-4 text-purple-400" />
-                  <span>https://www.linkedin.com/in/shrijal-goswami/</span>
+                  <span>https://www.linkedin.com/in/shrijal-goswami</span>
                 </a>
 
                 <a
