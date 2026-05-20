@@ -31,7 +31,7 @@ const Contact = () => {
     setToast({ show: true, message, type });
     setTimeout(() => {
       setToast(prev => ({ ...prev, show: false }));
-    }, 4000);
+    }, 4500);
   };
 
   const validateEmail = (email) => {
@@ -102,6 +102,11 @@ const Contact = () => {
     const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
+    // Temporary console log debugging (safely masked)
+    console.log("[EmailJS Debug] Service ID:", serviceId ? `${serviceId.substring(0, 8)}***` : "UNDEFINED");
+    console.log("[EmailJS Debug] Template ID:", templateId ? `${templateId.substring(0, 8)}***` : "UNDEFINED");
+    console.log("[EmailJS Debug] Public Key:", publicKey ? `${publicKey.substring(0, 8)}***` : "UNDEFINED");
+
     const isSandboxFallback = 
       !serviceId || 
       !templateId || 
@@ -151,14 +156,19 @@ const Contact = () => {
         "4. Initiating REST socket to api.emailjs.com gateway...",
       ]);
 
+      // Template variable names match exactly the user specification
       const templateParams = {
         from_name: name,
-        reply_to: email,
+        from_email: email,
         message: message,
-        to_email: 'goswamivansh999@gmail.com'
+        time: new Date().toLocaleString()
       };
 
+      console.log("[EmailJS Debug] Dispatching parameters payload:", templateParams);
+
       const result = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+
+      console.log("[EmailJS Debug] Full raw API response received:", result);
 
       if (result.status === 200) {
         setLogs(prev => [
@@ -181,10 +191,11 @@ const Contact = () => {
           colors: ['#a78bfa', '#818cf8', '#34d399']
         });
       } else {
-        throw new Error(`Invalid status response: ${result.status}`);
+        throw new Error(`Invalid status response code: ${result.status} (Text: ${result.text})`);
       }
 
     } catch (error) {
+      console.error("[EmailJS Debug] Dispatch error caught:", error);
       const errorStr = error?.text || error?.message || "Unknown API transport error";
       setLogs(prev => [
         ...prev,
@@ -192,7 +203,7 @@ const Contact = () => {
         "   > Diagnostic dump saved. Thread terminated."
       ]);
       setSubmitting(false);
-      showToast("Failed to send message. Please try email endpoints directly.", "error");
+      showToast(`Failed to send message: ${errorStr}`, "error");
     }
   };
 
@@ -305,6 +316,7 @@ const Contact = () => {
                   <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Name</label>
                   <input
                     type="text"
+                    name="from_name"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -317,6 +329,7 @@ const Contact = () => {
                   <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Email</label>
                   <input
                     type="email"
+                    name="from_email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -330,6 +343,7 @@ const Contact = () => {
               <div className="space-y-1.5">
                 <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Payload / Message</label>
                 <textarea
+                  name="message"
                   required
                   rows="4"
                   value={formData.message}
