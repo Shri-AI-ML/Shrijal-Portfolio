@@ -220,10 +220,10 @@ const Contact = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 border px-4 py-3 rounded-lg shadow-xl font-mono text-xs max-w-sm backdrop-blur-md ${toast.type === 'success'
-                  ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400'
-                  : toast.type === 'warning'
-                    ? 'bg-amber-950/90 border-amber-500/30 text-amber-400'
-                    : 'bg-red-950/90 border-red-500/30 text-red-400'
+                ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400'
+                : toast.type === 'warning'
+                  ? 'bg-amber-950/90 border-amber-500/30 text-amber-400'
+                  : 'bg-red-950/90 border-red-500/30 text-red-400'
                 }`}
             >
               {toast.type === 'success' && <CheckCircle className="h-4 w-4 shrink-0" />}
@@ -274,7 +274,7 @@ const Contact = () => {
                   className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
                 >
                   <Linkedin className="h-4 w-4 text-purple-400" />
-                  <span>www.linkedin.com/in/shrijal-goswami</span>
+                  <span>https://www.linkedin.com/in/shrijal-goswami/</span>
                 </a>
 
                 <a
