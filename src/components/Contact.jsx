@@ -107,12 +107,12 @@ const Contact = () => {
     console.log("[EmailJS Debug] Template ID:", templateId ? `${templateId.substring(0, 8)}***` : "UNDEFINED");
     console.log("[EmailJS Debug] Public Key:", publicKey ? `${publicKey.substring(0, 8)}***` : "UNDEFINED");
 
-    const isSandboxFallback = 
-      !serviceId || 
-      !templateId || 
-      !publicKey || 
-      serviceId.includes("placeholder") || 
-      templateId.includes("placeholder") || 
+    const isSandboxFallback =
+      !serviceId ||
+      !templateId ||
+      !publicKey ||
+      serviceId.includes("placeholder") ||
+      templateId.includes("placeholder") ||
       publicKey.includes("placeholder");
 
     if (isSandboxFallback) {
@@ -138,7 +138,7 @@ const Contact = () => {
         localStorage.setItem('shrijal_contact_submit_time', Date.now().toString());
         setFormData({ name: '', email: '', message: '' });
         showToast("Sandbox simulated success! (Configure .env to send real emails)", "warning");
-        
+
         confetti({
           particleCount: 30,
           spread: 40,
@@ -219,13 +219,12 @@ const Contact = () => {
               initial={{ opacity: 0, y: 50, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 border px-4 py-3 rounded-lg shadow-xl font-mono text-xs max-w-sm backdrop-blur-md ${
-                toast.type === 'success' 
-                  ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400' 
+              className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 border px-4 py-3 rounded-lg shadow-xl font-mono text-xs max-w-sm backdrop-blur-md ${toast.type === 'success'
+                  ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400'
                   : toast.type === 'warning'
-                  ? 'bg-amber-950/90 border-amber-500/30 text-amber-400'
-                  : 'bg-red-950/90 border-red-500/30 text-red-400'
-              }`}
+                    ? 'bg-amber-950/90 border-amber-500/30 text-amber-400'
+                    : 'bg-red-950/90 border-red-500/30 text-red-400'
+                }`}
             >
               {toast.type === 'success' && <CheckCircle className="h-4 w-4 shrink-0" />}
               {toast.type === 'warning' && <AlertTriangle className="h-4 w-4 shrink-0" />}
@@ -234,7 +233,7 @@ const Contact = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-3 py-1 rounded-full text-xs text-zinc-400 font-mono mb-4">
@@ -250,7 +249,7 @@ const Contact = () => {
         </div>
 
         <div className="grid md:grid-cols-12 gap-8 items-stretch">
-          
+
           {/* Contact Details & Links */}
           <div className="md:col-span-5 space-y-6 flex flex-col justify-between">
             <div className="space-y-6">
@@ -258,29 +257,29 @@ const Contact = () => {
               <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
                 Looking to build something impactful with AI? Drop a line to discuss retrieval system optimization, model generalization stacking, or FastAPI integrations. Always open to high-impact projects.
               </p>
-              
+
               <div className="space-y-4 font-mono text-xs">
-                <a 
-                  href="mailto:goswamivansh999@gmail.com" 
+                <a
+                  href="mailto:goswamivansh999@gmail.com"
                   className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
                 >
                   <Mail className="h-4 w-4 text-purple-400" />
                   <span>goswamivansh999@gmail.com</span>
                 </a>
-                
-                <a 
-                  href="https://linkedin.com/in/shrijalgoswami" 
-                  target="_blank" 
+
+                <a
+                  href="www.linkedin.com/in/shrijal-goswami"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
                 >
                   <Linkedin className="h-4 w-4 text-purple-400" />
-                  <span>linkedin.com/in/shrijalgoswami</span>
+                  <span>www.linkedin.com/in/shrijal-goswami</span>
                 </a>
 
-                <a 
-                  href="https://github.com/Shri-AI-ML" 
-                  target="_blank" 
+                <a
+                  href="https://github.com/Shri-AI-ML"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
                 >
@@ -299,7 +298,7 @@ const Contact = () => {
           {/* Contact Form & Console */}
           <div className="md:col-span-7 flex flex-col justify-between space-y-6">
             <form onSubmit={handleSubmit} className="glass-panel border border-zinc-900 rounded-xl p-6 space-y-4">
-              
+
               {/* Spam Prevention Honeypot Field */}
               <input
                 type="text"
