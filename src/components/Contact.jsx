@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Send, Terminal, ShieldAlert, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Send, Terminal, ShieldAlert, CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
+import emailjs from '@emailjs/browser';
+import confetti from 'canvas-confetti';
 
 const Github = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -17,60 +19,210 @@ const Linkedin = ({ className }) => (
   </svg>
 );
 
-import confetti from 'canvas-confetti';
-
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [honeypot, setHoneypot] = useState('');
   const [logs, setLogs] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  const handleSubmit = (e) => {
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) return;
+    if (submitting) return;
 
-    setSubmitting(true);
+    const { name, email, message } = formData;
+
+    // Reset States
     setSubmitted(false);
-    setLogs([
-      "1. Initializing client side validation check...",
-      "2. Packages compiled successfully. Initializing REST webhook...",
-      "3. Opening socket to secure mail dispatch gateway...",
-    ]);
+    setLogs(["[SYSTEM] Initializing client validation checks..."]);
 
-    setTimeout(() => {
+    // 1. Client-side Validation Checks
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      const errorMsg = "[ERROR] Required fields are missing.";
+      setLogs(prev => [...prev, errorMsg]);
+      showToast("Please fill in all fields.", "error");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      const errorMsg = "[ERROR] Invalid sender email syntax format.";
+      setLogs(prev => [...prev, errorMsg]);
+      showToast("Please provide a valid email address.", "error");
+      return;
+    }
+
+    setLogs(prev => [...prev, "1. Client validation completed successfully. [PASSED]"]);
+    setSubmitting(true);
+
+    // 2. Anti-Spam Mitigation Checks (Honeypot trap)
+    if (honeypot) {
       setLogs(prev => [
         ...prev,
-        `4. Packaging payload: { sender: '${formData.name}', email: '${formData.email}' }`,
-        "5. Running anti-spam vector analysis checks... [Status: CLEAR]",
-        "6. Dispatching raw POST payload request `/api/v1/dispatch`..."
+        "2. Executing anti-spam signature scans...",
+        "3. System security trigger: Bot signature flagged. [REJECTED]",
+        "4. Dispatching virtual dummy success code packet..."
       ]);
-    }, 700);
+      setTimeout(() => {
+        setLogs(prev => [...prev, "5. Simulated dispatch accepted. Status 200 (Mock)."]);
+        setSubmitting(false);
+        setSubmitted(true);
+        setFormData({ name: '', email: '', message: '' });
+      }, 1000);
+      return;
+    }
 
-    setTimeout(() => {
+    // 3. Client Throttling prevention (max 1 email per 60 seconds)
+    const lastSubmitTime = localStorage.getItem('shrijal_contact_submit_time');
+    const now = Date.now();
+    if (lastSubmitTime && now - parseInt(lastSubmitTime) < 60000) {
+      const cooldownRemaining = Math.ceil((60000 - (now - parseInt(lastSubmitTime))) / 1000);
+      const errorMsg = `[ERROR] Rate limit threshold triggered. Cooldown active for ${cooldownRemaining}s.`;
+      setLogs(prev => [...prev, errorMsg]);
+      showToast(`Rate limit active. Please wait ${cooldownRemaining} seconds.`, "error");
+      setSubmitting(false);
+      return;
+    }
+
+    setLogs(prev => [...prev, "2. Running anti-spam screenings... [CLEAR]"]);
+
+    // 4. Resolve credentials from environment variables
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    const isSandboxFallback = 
+      !serviceId || 
+      !templateId || 
+      !publicKey || 
+      serviceId.includes("placeholder") || 
+      templateId.includes("placeholder") || 
+      publicKey.includes("placeholder");
+
+    if (isSandboxFallback) {
+      // Environment Fallback Sandbox Mode
       setLogs(prev => [
         ...prev,
-        "7. Response: 202 Accepted. Message added to local Redis queue.",
-        "8. Triggering email dispatch worker... [Status: DISPATCHED]",
-        "9. Server response cached. Logging complete."
+        "3. Loading system configurations... [SANDBOX FALLBACK ACTIVE]",
+        "   > Warning: VITE_EMAILJS_* credentials missing or set to placeholder.",
+        "   > Executing frontend simulation sequences...",
+        "4. Establishing virtual socket connection...",
+        "5. Packaging local payload structures..."
+      ]);
+
+      setTimeout(() => {
+        setLogs(prev => [
+          ...prev,
+          "6. Sending message payload to mockup service...",
+          "7. REST Response: 202 Accepted (Simulated queue).",
+          "8. Local thread executed. Simulation complete."
+        ]);
+        setSubmitting(false);
+        setSubmitted(true);
+        localStorage.setItem('shrijal_contact_submit_time', Date.now().toString());
+        setFormData({ name: '', email: '', message: '' });
+        showToast("Sandbox simulated success! (Configure .env to send real emails)", "warning");
+        
+        confetti({
+          particleCount: 30,
+          spread: 40,
+          colors: ['#a78bfa', '#818cf8']
+        });
+      }, 1500);
+      return;
+    }
+
+    // 5. Real EmailJS Integration
+    try {
+      setLogs(prev => [
+        ...prev,
+        "3. Resolved server configurations successfully.",
+        "4. Initiating REST socket to api.emailjs.com gateway...",
+      ]);
+
+      const templateParams = {
+        from_name: name,
+        reply_to: email,
+        message: message,
+        to_email: 'goswamivansh999@gmail.com'
+      };
+
+      const result = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+
+      if (result.status === 200) {
+        setLogs(prev => [
+          ...prev,
+          "5. Socket response: 200 OK Connection established.",
+          "6. Transmitting payload headers...",
+          "7. Dispatch Accepted. Unique ID generated successfully.",
+          "8. Thread closed. Gateway response cached."
+        ]);
+        setSubmitting(false);
+        setSubmitted(true);
+        localStorage.setItem('shrijal_contact_submit_time', Date.now().toString());
+        setFormData({ name: '', email: '', message: '' });
+        showToast("Message dispatched successfully! Shrijal will be notified.", "success");
+
+        confetti({
+          particleCount: 50,
+          spread: 50,
+          origin: { y: 0.9 },
+          colors: ['#a78bfa', '#818cf8', '#34d399']
+        });
+      } else {
+        throw new Error(`Invalid status response: ${result.status}`);
+      }
+
+    } catch (error) {
+      const errorStr = error?.text || error?.message || "Unknown API transport error";
+      setLogs(prev => [
+        ...prev,
+        `[CRITICAL] REST dispatch failed: ${errorStr}`,
+        "   > Diagnostic dump saved. Thread terminated."
       ]);
       setSubmitting(false);
-      setSubmitted(true);
-      setFormData({ name: '', email: '', message: '' });
-
-      // Celebration confetti
-      confetti({
-        particleCount: 50,
-        spread: 50,
-        origin: { y: 0.9 },
-        colors: ['#a78bfa', '#818cf8', '#34d399']
-      });
-    }, 1800);
+      showToast("Failed to send message. Please try email endpoints directly.", "error");
+    }
   };
 
   return (
     <section id="contact" className="py-16 md:py-24 border-t border-zinc-900 relative">
       <div className="absolute inset-0 bg-dot-grid opacity-20 pointer-events-none" />
       <div className="max-w-5xl mx-auto relative z-10">
+
+        {/* Dynamic Toast Notifications */}
+        <AnimatePresence>
+          {toast.show && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 border px-4 py-3 rounded-lg shadow-xl font-mono text-xs max-w-sm backdrop-blur-md ${
+                toast.type === 'success' 
+                  ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400' 
+                  : toast.type === 'warning'
+                  ? 'bg-amber-950/90 border-amber-500/30 text-amber-400'
+                  : 'bg-red-950/90 border-red-500/30 text-red-400'
+              }`}
+            >
+              {toast.type === 'success' && <CheckCircle className="h-4 w-4 shrink-0" />}
+              {toast.type === 'warning' && <AlertTriangle className="h-4 w-4 shrink-0" />}
+              {toast.type === 'error' && <AlertCircle className="h-4 w-4 shrink-0" />}
+              <span>{toast.message}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {/* Header */}
         <div className="text-center mb-16">
@@ -136,6 +288,18 @@ const Contact = () => {
           {/* Contact Form & Console */}
           <div className="md:col-span-7 flex flex-col justify-between space-y-6">
             <form onSubmit={handleSubmit} className="glass-panel border border-zinc-900 rounded-xl p-6 space-y-4">
+              
+              {/* Spam Prevention Honeypot Field */}
+              <input
+                type="text"
+                name="bot_trap"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+                style={{ display: 'none' }}
+                autoComplete="off"
+                tabIndex="-1"
+              />
+
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Name</label>
@@ -146,7 +310,7 @@ const Contact = () => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Alice Dev"
                     disabled={submitting}
-                    className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors"
+                    className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors disabled:opacity-50"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -158,7 +322,7 @@ const Contact = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="alice@domain.com"
                     disabled={submitting}
-                    className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors"
+                    className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -172,22 +336,22 @@ const Contact = () => {
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   placeholder="Hey Shrijal, let's connect regarding a RAG system optimization project..."
                   disabled={submitting}
-                  className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors resize-none"
+                  className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors resize-none disabled:opacity-50"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.2)] cursor-pointer"
+                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.2)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Send className="h-4 w-4" />
-                <span>{submitting ? "Transmitting..." : "Send Secure Message"}</span>
+                <span>{submitting ? "Transmitting payload..." : "Send Secure Message"}</span>
               </button>
             </form>
 
             {/* Submission Terminal Logger Output */}
-            <div className="glass-panel border border-zinc-900 rounded-xl p-4 font-mono text-xs h-[120px] flex flex-col justify-between">
+            <div className="glass-panel border border-zinc-900 rounded-xl p-4 font-mono text-xs h-[130px] flex flex-col justify-between">
               <div className="flex items-center justify-between text-[9px] text-zinc-500 border-b border-zinc-900/60 pb-1.5 mb-1.5 uppercase font-bold">
                 <div className="flex items-center gap-1.5">
                   <Terminal className="h-3.5 w-3.5 text-purple-400" />
@@ -199,8 +363,12 @@ const Contact = () => {
               <div className="flex-1 overflow-y-auto space-y-1 text-[10px] text-zinc-400 terminal-scroll">
                 {logs.map((log, idx) => (
                   <div key={idx} className="leading-relaxed">
-                    {log.includes('Response') || log.includes('dispatched') || log.includes('worker') ? (
+                    {log.startsWith('[ERROR]') || log.startsWith('[CRITICAL]') ? (
+                      <span className="text-red-400 font-semibold">{log}</span>
+                    ) : log.includes('Response') || log.includes('Accept') || log.includes('success') || log.includes('dispatched') || log.includes('completed') || log.includes('closed') ? (
                       <span className="text-emerald-400 font-semibold">{log}</span>
+                    ) : log.includes('Warning') || log.includes('FALLBACK') ? (
+                      <span className="text-amber-400 font-semibold">{log}</span>
                     ) : (
                       <span className="text-zinc-500">{log}</span>
                     )}
@@ -209,7 +377,7 @@ const Contact = () => {
                 {submitting && (
                   <div className="flex items-center gap-1 text-zinc-500 italic">
                     <span className="w-1 h-3.5 bg-purple-500 animate-pulse"></span>
-                    <span>Transmitting buffers...</span>
+                    <span>Streaming network buffers...</span>
                   </div>
                 )}
                 {logs.length === 0 && (
