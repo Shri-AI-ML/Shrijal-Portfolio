@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Terminal, Brain, Sliders, CheckCircle2, ChevronRight, FileText, Activity } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const Github = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -8,8 +9,6 @@ const Github = ({ className }) => (
     <path d="M9 18c-4.51 2-5-2-7-2" />
   </svg>
 );
-
-import confetti from 'canvas-confetti';
 
 const Projects = () => {
   const [activeTabs, setActiveTabs] = useState({

@@ -9,6 +9,8 @@ const RAGTerminal = () => {
   const [currentResponse, setCurrentResponse] = useState('');
   const [retrievedChunks, setRetrievedChunks] = useState([]);
   const terminalEndRef = useRef(null);
+  const terminalContainerRef = useRef(null);
+  const shouldAutoScrollRef = useRef(true);
 
   // Hardcoded resume database chunks
   const dbChunks = [
@@ -62,10 +64,31 @@ const RAGTerminal = () => {
     ]);
   }, []);
 
+  // Auto-scroll logic: only scroll if the user is already near the bottom
+  const scrollToBottom = (behavior = 'smooth') => {
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTo({
+        top: terminalContainerRef.current.scrollHeight,
+        behavior
+      });
+    }
+  };
+
+  const handleScroll = () => {
+    if (terminalContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = terminalContainerRef.current;
+      // Allow a 50px buffer zone to detect if the user is at/near the bottom
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 50;
+      shouldAutoScrollRef.current = isNearBottom;
+    }
+  };
+
   useEffect(() => {
-    // Auto-scroll to bottom of terminal
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (shouldAutoScrollRef.current) {
+      // Use instant scroll during rapid streaming to prevent lag/stacking scroll events,
+      // and smooth scroll for general layout updates.
+      const behavior = currentResponse ? 'auto' : 'smooth';
+      scrollToBottom(behavior);
     }
   }, [logs, currentResponse, retrievedChunks]);
 
@@ -74,6 +97,9 @@ const RAGTerminal = () => {
 
     const normalizedQuery = queryText.toLowerCase().trim();
     
+    // Force auto-scroll to resume on new query execution
+    shouldAutoScrollRef.current = true;
+
     // Add user query to logs
     setLogs(prev => [...prev, { type: 'user', text: queryText }]);
     setIsTyping(true);
@@ -210,7 +236,11 @@ const RAGTerminal = () => {
           </div>
 
           {/* Terminal Console */}
-          <div className="p-6 h-[400px] overflow-y-auto font-mono text-sm space-y-4 terminal-scroll bg-[#030303]/90">
+          <div 
+            ref={terminalContainerRef}
+            onScroll={handleScroll}
+            className="p-6 h-[400px] overflow-y-auto font-mono text-sm space-y-4 terminal-scroll bg-[#030303]/90"
+          >
             {logs.map((log, idx) => (
               <div key={idx} className="leading-relaxed">
                 {log.type === 'sys' && (
