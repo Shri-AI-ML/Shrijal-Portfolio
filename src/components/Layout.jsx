@@ -110,7 +110,7 @@ const Layout = ({ children }) => {
               <Github className="h-5 w-5" />
             </a>
             <a
-              href="https://linkedin.com/in/shrijalgoswami"
+              href="https://www.linkedin.com/in/shrijal-goswami"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 text-zinc-400 hover:text-white transition-colors"
@@ -177,7 +177,7 @@ const Layout = ({ children }) => {
                   <Github className="h-5 w-5" /> GitHub
                 </a>
                 <a
-                  href="https://linkedin.com/in/shrijalgoswami"
+                  href="https://www.linkedin.com/in/shrijal-goswami"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white"
