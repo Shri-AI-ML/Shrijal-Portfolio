@@ -106,6 +106,7 @@ const Layout = ({ children }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 text-zinc-400 hover:text-white transition-colors"
+              aria-label="Shrijal Goswami's GitHub Profile"
             >
               <Github className="h-5 w-5" />
             </a>
@@ -114,6 +115,7 @@ const Layout = ({ children }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 text-zinc-400 hover:text-white transition-colors"
+              aria-label="Shrijal Goswami's LinkedIn Profile"
             >
               <Linkedin className="h-5 w-5" />
             </a>
@@ -121,6 +123,7 @@ const Layout = ({ children }) => {
               href="/Shrijal_Goswami_Resume.pdf"
               download="Shrijal_Goswami_Resume.pdf"
               className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-purple-500/30 hover:bg-purple-950/10 text-xs font-mono px-4 py-2 rounded-md transition-all"
+              aria-label="Download Shrijal Goswami's Resume PDF"
             >
               <FileText className="h-4 w-4 text-purple-400" />
               <span>Resume.pdf</span>
@@ -133,12 +136,14 @@ const Layout = ({ children }) => {
               href="/Shrijal_Goswami_Resume.pdf"
               download="Shrijal_Goswami_Resume.pdf"
               className="p-2 bg-zinc-950 border border-zinc-800 rounded-md text-zinc-400"
+              aria-label="Download Shrijal Goswami's Resume PDF"
             >
               <FileText className="h-4 w-4" />
             </a>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 text-zinc-400 hover:text-white"
+              aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -211,6 +216,7 @@ const Layout = ({ children }) => {
                 onClick={handleCopyEmail} 
                 className="ml-2 p-1 text-zinc-500 hover:text-white transition-colors"
                 title="Copy Email"
+                aria-label="Copy Shrijal Goswami's Email Address to Clipboard"
               >
                 {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
               </button>

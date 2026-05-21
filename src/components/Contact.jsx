@@ -312,8 +312,9 @@ const Contact = () => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Name</label>
+                  <label htmlFor="from_name" className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Name</label>
                   <input
+                    id="from_name"
                     type="text"
                     name="from_name"
                     required
@@ -325,8 +326,9 @@ const Contact = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Email</label>
+                  <label htmlFor="from_email" className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Email</label>
                   <input
+                    id="from_email"
                     type="email"
                     name="from_email"
                     required
@@ -340,8 +342,9 @@ const Contact = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Payload / Message</label>
+                <label htmlFor="message" className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Payload / Message</label>
                 <textarea
+                  id="message"
                   name="message"
                   required
                   rows="4"

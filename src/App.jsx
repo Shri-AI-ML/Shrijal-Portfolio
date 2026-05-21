@@ -1,16 +1,28 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import NeuralCanvas from './components/ui/NeuralCanvas';
 import GlowBlob from './components/ui/GlowBlob';
 import Layout from './components/Layout';
 import Hero from './components/Hero';
 import About from './components/About';
-import RAGTerminal from './components/RAGTerminal';
-import Experience from './components/Experience';
-import Skills from './components/Skills';
-import Projects from './components/Projects';
-import ResearchLogs from './components/ResearchLogs';
-import Certifications from './components/Certifications';
-import Contact from './components/Contact';
+
+// Lazy loaded components below the fold for performance/SEO optimization
+const RAGTerminal = lazy(() => import('./components/RAGTerminal'));
+const Experience = lazy(() => import('./components/Experience'));
+const Skills = lazy(() => import('./components/Skills'));
+const Projects = lazy(() => import('./components/Projects'));
+const ResearchLogs = lazy(() => import('./components/ResearchLogs'));
+const Certifications = lazy(() => import('./components/Certifications'));
+const Contact = lazy(() => import('./components/Contact'));
+
+// Premium terminal-style fallback loader matching design system
+const ModuleLoader = () => (
+  <div className="py-20 flex flex-col items-center justify-center min-h-[200px]">
+    <div className="flex flex-col items-center gap-3 font-mono text-zinc-500 text-xs">
+      <div className="h-5 w-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      <span>INITIALIZING MODULE BUFFER...</span>
+    </div>
+  </div>
+);
 
 function App() {
   return (
@@ -26,19 +38,24 @@ function App() {
 
       {/* Global Glassmorphism layout wrapper */}
       <Layout>
-        {/* Core Sections */}
+        {/* Above-the-fold content loaded instantly */}
         <Hero />
         <About />
-        <RAGTerminal />
-        <Experience />
-        <Skills />
-        <Projects />
-        <ResearchLogs />
-        <Certifications />
-        <Contact />
+
+        {/* Below-the-fold content loaded lazily */}
+        <Suspense fallback={<ModuleLoader />}>
+          <RAGTerminal />
+          <Experience />
+          <Skills />
+          <Projects />
+          <ResearchLogs />
+          <Certifications />
+          <Contact />
+        </Suspense>
       </Layout>
     </div>
   );
 }
 
 export default App;
+
