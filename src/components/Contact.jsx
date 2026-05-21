@@ -268,7 +268,7 @@ const Contact = () => {
                 </a>
 
                 <a
-                  href="www.linkedin.com/in/shrijal-goswami"
+                  href="https://www.linkedin.com/in/shrijal-goswami"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
