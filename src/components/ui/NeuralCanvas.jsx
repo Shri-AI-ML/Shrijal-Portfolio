@@ -151,6 +151,11 @@ const NeuralCanvas = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 w-full h-full pointer-events-none z-0"
+      style={{
+        contain: 'strict',
+        willChange: 'transform',
+        transform: 'translate3d(0, 0, 0)'
+      }}
     />
   );
 };

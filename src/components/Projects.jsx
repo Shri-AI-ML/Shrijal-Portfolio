@@ -90,9 +90,9 @@ const Projects = () => {
       if (patientChol > 240) baseRisk += 15;
       if (patientHR < 140) baseRisk += 15; // Lower max HR under stress is higher risk
       if (angina) baseRisk += 22;
-      
+
       const finalRisk = Math.min(baseRisk, 98);
-      
+
       setPredResult({
         risk: finalRisk,
         classification: finalRisk > 50 ? "High Diagnostic Priority" : "Normal / Low Priority",
@@ -117,7 +117,7 @@ const Projects = () => {
   return (
     <section id="projects" className="py-16 md:py-24 border-t border-zinc-900 relative">
       <div className="max-w-6xl mx-auto">
-        
+
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-3 py-1 rounded-full text-xs text-zinc-400 font-mono mb-4">
             <Brain className="h-3.5 w-3.5 text-purple-400" />
@@ -133,10 +133,10 @@ const Projects = () => {
 
         {/* PROJECTS CONTAINER */}
         <div className="space-y-16">
-          
+
           {/* PROJECT 1: EXPLAINABLE RAG QA */}
           <div className="glass-panel border border-zinc-900 rounded-2xl overflow-hidden grid lg:grid-cols-12 gap-0">
-            
+
             {/* Project Info Panel */}
             <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-zinc-900">
               <div>
@@ -145,9 +145,9 @@ const Projects = () => {
                     RETRIEVAL ENGINE
                   </span>
                   <div className="flex gap-2">
-                    <a 
-                      href="https://github.com/Shri-AI-ML/Explainable-RAG-QA-System" 
-                      target="_blank" 
+                    <a
+                      href="https://github.com/Shri-AI-ML/Explainable-RAG-QA-System"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-md hover:border-purple-500/20 text-zinc-400 hover:text-white transition-all"
                     >
@@ -161,13 +161,13 @@ const Projects = () => {
 
                 {/* Tab Switcher */}
                 <div className="flex gap-2 border-b border-zinc-900 py-3 mt-4">
-                  <button 
+                  <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, rag: 'specs' }))}
                     className={`text-xs font-mono pb-1 border-b ${activeTabs.rag === 'specs' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
                   >
                     System Architecture
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, rag: 'playground' }))}
                     className={`text-xs font-mono pb-1 border-b flex items-center gap-1.5 ${activeTabs.rag === 'playground' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
                   >
@@ -226,10 +226,10 @@ const Projects = () => {
                             <span className="text-zinc-400">Hybrid Alpha Weight:</span>
                             <span className="text-purple-400 font-bold">{hybridAlpha.toFixed(2)}</span>
                           </div>
-                          <input 
-                            type="range" 
-                            min="0" 
-                            max="1" 
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
                             step="0.05"
                             value={hybridAlpha}
                             onChange={(e) => setHybridAlpha(parseFloat(e.target.value))}
@@ -297,13 +297,12 @@ const Projects = () => {
                   </div>
                   <div className="space-y-2 font-mono text-xs">
                     {sortedRAGResults.map((doc, idx) => (
-                      <div 
-                        key={doc.id} 
-                        className={`p-3 border rounded-lg transition-all duration-300 ${
-                          idx === 0 
-                            ? 'bg-purple-950/15 border-purple-500/40 shadow-[0_0_15px_rgba(139,92,246,0.05)]' 
+                      <div
+                        key={doc.id}
+                        className={`p-3 border rounded-lg transition-all duration-300 ${idx === 0
+                            ? 'bg-purple-950/15 border-purple-500/40 shadow-[0_0_15px_rgba(139,92,246,0.05)]'
                             : 'bg-zinc-950/80 border-zinc-900'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-1.5">
                           <span className={`font-semibold text-xs ${idx === 0 ? 'text-purple-300' : 'text-zinc-400'}`}>
@@ -329,7 +328,7 @@ const Projects = () => {
 
           {/* PROJECT 2: HEART DISEASE ENSEMBLE */}
           <div className="glass-panel border border-zinc-900 rounded-2xl overflow-hidden grid lg:grid-cols-12 gap-0">
-            
+
             {/* Project Info Panel */}
             <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-zinc-900">
               <div>
@@ -338,9 +337,9 @@ const Projects = () => {
                     DIAGNOSTIC ENSEMBLE
                   </span>
                   <div className="flex gap-2">
-                    <a 
-                      href="https://github.com/Shri-AI-ML/Heart-Disease-Prediction" 
-                      target="_blank" 
+                    <a
+                      href="https://github.com/Shri-AI-ML/Heart-Disease-Prediction"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-md hover:border-purple-500/20 text-zinc-400 hover:text-white transition-all"
                     >
@@ -354,13 +353,13 @@ const Projects = () => {
 
                 {/* Tab Switcher */}
                 <div className="flex gap-2 border-b border-zinc-900 py-3 mt-4">
-                  <button 
+                  <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, heart: 'specs' }))}
                     className={`text-xs font-mono pb-1 border-b ${activeTabs.heart === 'specs' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
                   >
                     System Architecture
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, heart: 'playground' }))}
                     className={`text-xs font-mono pb-1 border-b flex items-center gap-1.5 ${activeTabs.heart === 'playground' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
                   >
@@ -412,28 +411,28 @@ const Projects = () => {
                         className="space-y-3.5 text-xs font-mono text-zinc-400"
                       >
                         <p className="text-zinc-500">// Configure the patient metrics slider to trigger the stacking generalizer inference pipeline.</p>
-                        
+
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
                             <span className="text-[10px] text-zinc-500">Patient Age ({patientAge})</span>
-                            <input 
-                              type="range" min="30" max="80" value={patientAge} 
+                            <input
+                              type="range" min="30" max="80" value={patientAge}
                               onChange={(e) => setPatientAge(parseInt(e.target.value))}
                               className="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-indigo-500"
                             />
                           </div>
                           <div className="space-y-1">
                             <span className="text-[10px] text-zinc-500">Cholesterol ({patientChol} mg/dL)</span>
-                            <input 
-                              type="range" min="150" max="380" value={patientChol} 
+                            <input
+                              type="range" min="150" max="380" value={patientChol}
                               onChange={(e) => setPatientChol(parseInt(e.target.value))}
                               className="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-indigo-500"
                             />
                           </div>
                           <div className="space-y-1">
                             <span className="text-[10px] text-zinc-500">Max Heart Rate ({patientHR} bpm)</span>
-                            <input 
-                              type="range" min="90" max="200" value={patientHR} 
+                            <input
+                              type="range" min="90" max="200" value={patientHR}
                               onChange={(e) => setPatientHR(parseInt(e.target.value))}
                               className="w-full h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-indigo-500"
                             />
@@ -441,13 +440,13 @@ const Projects = () => {
                           <div className="flex flex-col justify-center">
                             <span className="text-[10px] text-zinc-500 mb-1">Exercise Angina</span>
                             <div className="flex gap-2">
-                              <button 
+                              <button
                                 onClick={() => setAngina(true)}
                                 className={`px-2 py-0.5 border text-[10px] rounded ${angina ? 'bg-indigo-950 border-indigo-500 text-indigo-300' : 'bg-zinc-950 border-zinc-900 text-zinc-500'}`}
                               >
                                 Yes
                               </button>
-                              <button 
+                              <button
                                 onClick={() => setAngina(false)}
                                 className={`px-2 py-0.5 border text-[10px] rounded ${!angina ? 'bg-indigo-950 border-indigo-500 text-indigo-300' : 'bg-zinc-950 border-zinc-900 text-zinc-500'}`}
                               >
@@ -537,14 +536,13 @@ const Projects = () => {
                   </div>
 
                   {predResult && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className={`p-4 border rounded-lg flex items-center justify-between gap-4 ${
-                        predResult.risk > 50 
-                          ? 'bg-red-950/20 border-red-500/30' 
+                      className={`p-4 border rounded-lg flex items-center justify-between gap-4 ${predResult.risk > 50
+                          ? 'bg-red-950/20 border-red-500/30'
                           : 'bg-emerald-950/20 border-emerald-500/30'
-                      }`}
+                        }`}
                     >
                       <div>
                         <span className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Ensemble Diagnostic Output:</span>

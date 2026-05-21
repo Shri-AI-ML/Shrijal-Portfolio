@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from "framer-motion";
 
 const GlowBlob = ({ className = '', color = 'indigo', delay = 0, duration = 8 }) => {
   const colorMap = {
