@@ -26,7 +26,7 @@ const ModuleLoader = () => (
 
 function App() {
   return (
-    <div className="relative bg-[#030303] overflow-hidden min-h-screen">
+    <div className="relative bg-[var(--bg-primary)] overflow-hidden min-h-screen">
       {/* Interactive Background Particle Network */}
       <NeuralCanvas />
 

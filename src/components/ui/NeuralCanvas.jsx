@@ -15,85 +15,120 @@ const NeuralCanvas = () => {
     let height = (canvas.height = window.innerHeight);
 
     const particles = [];
-    const maxParticles = width < 768 ? 40 : 100; // Reduce density on mobile
-    const connectionDistance = 120;
-    const mouse = { x: null, y: null, radius: 180 };
+    // Strict particle counts to keep frame rates high on mobile and older laptops
+    const maxParticles = width < 768 ? 20 : 50;
+    const fov = 450; // Perspective zoom parameter
+    
+    // Mouse coordinates tracking for attraction
+    const mouse = { x: null, y: null, targetX: null, targetY: null, radius: 140 };
+    // Camera coordinates for scroll-independent parallax
+    const camera = { x: 0, y: 0, targetX: 0, targetY: 0 };
 
     class Particle {
       constructor() {
-        this.x = Math.random() * width;
-        this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.4;
-        this.vy = (Math.random() - 0.5) * 0.4;
-        this.radius = Math.random() * 1.5 + 1;
+        this.reset();
+        // Scatter initial particles in Z-depth to avoid spawn-clustering
+        this.z3d = Math.random() * fov;
+      }
+
+      reset() {
+        this.x3d = (Math.random() - 0.5) * width * 1.3;
+        this.y3d = (Math.random() - 0.5) * height * 1.3;
+        this.z3d = fov; // Start far in background
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.vz = -0.2 - Math.random() * 0.4; // Slowly move forward
+        this.radius = Math.random() * 1.2 + 0.8;
       }
 
       update() {
-        this.x += this.vx;
-        this.y += this.vy;
+        this.x3d += this.vx;
+        this.y3d += this.vy;
+        this.z3d += this.vz;
 
-        // Bounce on borders
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
+        // Reset if the particle passes the camera or goes way off screen
+        if (this.z3d <= -fov || Math.abs(this.x3d) > width * 1.5 || Math.abs(this.y3d) > height * 1.5) {
+          this.reset();
+        }
 
-        // Mouse attraction (magnetic effect)
+        // Project 3D coordinates onto 2D canvas space
+        const scale = fov / (fov + this.z3d);
+        this.x = (this.x3d + camera.x) * scale + width / 2;
+        this.y = (this.y3d + camera.y) * scale + height / 2;
+        this.screenRadius = this.radius * scale;
+        this.opacity = (1 - this.z3d / fov) * 0.4; // Fade out in distance
+
+        // Apply magnetic mouse pull in 3D projection space
         if (mouse.x !== null && mouse.y !== null) {
           const dx = mouse.x - this.x;
           const dy = mouse.y - this.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-
+          
           if (dist < mouse.radius) {
             const force = (mouse.radius - dist) / mouse.radius;
-            this.x -= (dx / dist) * force * 0.6;
-            this.y -= (dy / dist) * force * 0.6;
+            // Pull coordinates slowly toward target cursor
+            this.x3d += (dx / dist) * force * 0.3;
+            this.y3d += (dy / dist) * force * 0.3;
           }
         }
       }
 
       draw() {
+        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) return;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
+        ctx.arc(this.x, this.y, this.screenRadius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(129, 140, 248, ${this.opacity})`; // Soft indigo glow
         ctx.fill();
       }
     }
 
-    // Initialize particles
+    // Spawn initial particle population
     for (let i = 0; i < maxParticles; i++) {
       particles.push(new Particle());
     }
 
     const drawConnections = () => {
+      // Connect close particles together
       for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+        const pi = particles[i];
+        if (pi.x < 0 || pi.x > width || pi.y < 0 || pi.y > height) continue;
 
-          if (dist < connectionDistance) {
-            const alpha = (1 - dist / connectionDistance) * 0.12;
+        for (let j = i + 1; j < particles.length; j++) {
+          const pj = particles[j];
+          if (pj.x < 0 || pj.x > width || pj.y < 0 || pj.y > height) continue;
+
+          // Calculate Z-aware spatial distance
+          const dx = pi.x3d - pj.x3d;
+          const dy = pi.y3d - pj.y3d;
+          const dz = pi.z3d - pj.z3d;
+          const dist3d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+          if (dist3d < 160) {
+            const scale = fov / (fov + (pi.z3d + pj.z3d) / 2);
+            const alpha = (1 - dist3d / 160) * 0.12 * scale;
+
             ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
-            ctx.lineWidth = 0.5;
+            ctx.moveTo(pi.x, pi.y);
+            ctx.lineTo(pj.x, pj.y);
+            ctx.strokeStyle = `rgba(99, 102, 241, ${alpha})`;
+            ctx.lineWidth = 0.5 * scale;
             ctx.stroke();
           }
         }
 
-        // Draw connections to mouse
+        // Draw glowing link to mouse pointer if cursor is active
         if (mouse.x !== null && mouse.y !== null) {
-          const dx = particles[i].x - mouse.x;
-          const dy = particles[i].y - mouse.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < mouse.radius) {
-            const alpha = (1 - dist / mouse.radius) * 0.18;
+          const dx = pi.x - mouse.x;
+          const dy = pi.y - mouse.y;
+          const dist2d = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist2d < mouse.radius) {
+            const alpha = (1 - dist2d / mouse.radius) * 0.15 * (1 - pi.z3d / fov);
             ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.moveTo(pi.x, pi.y);
             ctx.lineTo(mouse.x, mouse.y);
-            ctx.strokeStyle = `rgba(99, 102, 241, ${alpha})`;
-            ctx.lineWidth = 0.6;
+            ctx.strokeStyle = `rgba(168, 85, 247, ${alpha})`;
+            ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
@@ -103,9 +138,20 @@ const NeuralCanvas = () => {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Draw faint dot grid in background
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.002)';
-      ctx.fillRect(0, 0, width, height);
+      // Interpolate camera movements for fluid parallax inertia
+      camera.x += (camera.targetX - camera.x) * 0.05;
+      camera.y += (camera.targetY - camera.y) * 0.05;
+
+      // Smooth mouse tracking coordinates
+      if (mouse.targetX !== null) {
+        if (mouse.x === null) {
+          mouse.x = mouse.targetX;
+          mouse.y = mouse.targetY;
+        } else {
+          mouse.x += (mouse.targetX - mouse.x) * 0.15;
+          mouse.y += (mouse.targetY - mouse.y) * 0.15;
+        }
+      }
 
       particles.forEach((p) => {
         p.update();
@@ -119,15 +165,22 @@ const NeuralCanvas = () => {
 
     render();
 
-    // Event listeners
     const handleMouseMove = (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+
+      // Map cursor movement to a subtle, organic camera tilt offset
+      camera.targetX = ((e.clientX / width) - 0.5) * -40;
+      camera.targetY = ((e.clientY / height) - 0.5) * -40;
     };
 
     const handleMouseLeave = () => {
+      mouse.targetX = null;
+      mouse.targetY = null;
       mouse.x = null;
       mouse.y = null;
+      camera.targetX = 0;
+      camera.targetY = 0;
     };
 
     const handleResize = () => {

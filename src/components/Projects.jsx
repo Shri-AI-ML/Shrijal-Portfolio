@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Terminal, Brain, Sliders, CheckCircle2, ChevronRight, FileText, Activity } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { use3DTilt } from '../hooks/use3DTilt';
 
 const Github = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -10,15 +11,131 @@ const Github = ({ className }) => (
   </svg>
 );
 
+// HTML5 Canvas ECG Heartbeat Wave Simulator
+const EKGCanvas = ({ riskScore = 20 }) => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId;
+    let width = (canvas.width = canvas.offsetWidth);
+    let height = (canvas.height = canvas.offsetHeight);
+
+    let x = 0;
+    const points = [];
+    
+    // Heart frequency calculated from risk score:
+    // Safe/normal risk = ~65 bpm, High Risk = ~110 bpm (tachycardia EKG readout)
+    const bpm = riskScore > 50 ? 110 : 65;
+    const speed = (bpm / 60) * 2.8;
+
+    const draw = () => {
+      // Create trailing blur effect
+      ctx.fillStyle = 'rgba(7, 7, 10, 0.12)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Color coding wave: Red warning for high risk, bright cyber emerald for safe
+      ctx.strokeStyle = riskScore > 50 ? 'rgba(239, 68, 68, 0.85)' : 'rgba(52, 211, 153, 0.85)';
+      ctx.lineWidth = 1.5;
+      
+      ctx.beginPath();
+      
+      x += speed;
+      if (x > width) x = 0;
+
+      // Draw ECG PQRST complex structure mathematically
+      let y = height / 2;
+      const cycle = 70;
+      const phase = x % cycle;
+
+      if (phase > 12 && phase < 18) { // P-Wave (atrial depolarization)
+        y -= Math.sin((phase - 12) * Math.PI / 6) * 3;
+      } else if (phase >= 20 && phase < 22) { // Q-Wave
+        y += (phase - 20) * 2.5;
+      } else if (phase >= 22 && phase < 25) { // R-Wave (ventricular depolarization peak)
+        y -= (25 - phase) * 7.5 - (phase - 22) * 7.5;
+      } else if (phase >= 25 && phase < 27) { // S-Wave
+        y += (phase - 25) * 3.5;
+      } else if (phase >= 34 && phase < 45) { // T-Wave (ventricular repolarization)
+        y -= Math.sin((phase - 34) * Math.PI / 11) * 4.5;
+      }
+
+      points.push({ x, y });
+      if (points.length > 220) points.shift();
+
+      for (let i = 0; i < points.length; i++) {
+        if (i === 0) {
+          ctx.moveTo(points[i].x, points[i].y);
+        } else {
+          // If cursor wrapped around, break current path stroke to avoid vertical lines
+          if (points[i].x > points[i - 1].x) {
+            ctx.lineTo(points[i].x, points[i].y);
+          } else {
+            ctx.moveTo(points[i].x, points[i].y);
+          }
+        }
+      }
+      ctx.stroke();
+
+      animationId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    const handleResize = () => {
+      if (canvas) {
+        width = canvas.width = canvas.offsetWidth;
+        height = canvas.height = canvas.offsetHeight;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [riskScore]);
+
+  return (
+    <div className="space-y-1">
+      <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest block flex justify-between">
+        <span>EKG REAL-TIME DIAGNOSTIC READOUT</span>
+        <span className={riskScore > 50 ? "text-red-400" : "text-emerald-400"}>
+          {riskScore > 50 ? "TACHYCARDIA_TRIGGER" : "NORMAL_SINUS_RHYTHM"}
+        </span>
+      </span>
+      <canvas ref={canvasRef} className="w-full h-12 bg-[#050508] border border-white/[0.03] rounded-lg" />
+    </div>
+  );
+};
+
+const ProjectContainer = ({ children }) => {
+  const { tiltStyle, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(3, 1.005);
+  return (
+    <div
+      style={tiltStyle}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="glass-panel border border-white/[0.04] rounded-2xl overflow-hidden grid lg:grid-cols-12 gap-0 relative shadow-xl bg-[#0b0b12]/40"
+    >
+      <div style={{ ...glareStyle, position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }} />
+      {children}
+    </div>
+  );
+};
+
 const Projects = () => {
   const [activeTabs, setActiveTabs] = useState({
-    rag: 'specs', // 'specs' or 'playground'
+    rag: 'specs',
     heart: 'specs'
   });
 
   // --- PLAYGROUND 1 STATE (Explainable RAG) ---
-  const [ragQuery, setRagQuery] = useState('Pinnacle Labs internship details');
-  const [hybridAlpha, setHybridAlpha] = useState(0.5); // 0 = Pure BM25, 1 = Pure Dense
+  const [hybridAlpha, setHybridAlpha] = useState(0.65);
 
   const ragDataset = [
     {
@@ -80,14 +197,13 @@ const Projects = () => {
         "5. RF Estimator probability: 0.762 | XGBoost Estimator probability: 0.841 | Logistic Reg probability: 0.785",
         "6. Feeding Level-0 probabilities vector [0.762, 0.841, 0.785] to Level-1 Meta-Learner (Logistic Regression)..."
       ]);
-    }, 800);
+    }, 700);
 
     setTimeout(() => {
-      // Logic for dummy score calculation based on variables
       let baseRisk = 20;
       if (patientAge > 55) baseRisk += 20;
       if (patientChol > 240) baseRisk += 15;
-      if (patientHR < 140) baseRisk += 15; // Lower max HR under stress is higher risk
+      if (patientHR < 140) baseRisk += 15;
       if (angina) baseRisk += 22;
 
       const finalRisk = Math.min(baseRisk, 98);
@@ -110,22 +226,22 @@ const Projects = () => {
           colors: ['#ef4444', '#f97316']
         });
       }
-    }, 1500);
+    }, 1400);
   };
 
   return (
-    <section id="projects" className="py-16 md:py-24 border-t border-zinc-900 relative">
-      <div className="max-w-6xl mx-auto">
+    <section id="projects" className="py-20 border-t border-white/[0.04] relative">
+      <div className="max-w-6xl mx-auto z-10 relative">
 
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-3 py-1 rounded-full text-xs text-zinc-400 font-mono mb-4">
-            <Brain className="h-3.5 w-3.5 text-purple-400" />
+          <div className="inline-flex items-center gap-2 border border-white/[0.04] bg-[#0e0e14] px-3 py-1 rounded-full text-[10px] text-zinc-400 font-mono mb-4">
+            <Brain className="h-3.5 w-3.5 text-indigo-400" />
             <span>/system/core/projects</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
             CORE AI SYSTEMS
           </h2>
-          <p className="text-sm text-zinc-400 max-w-xl mx-auto font-mono">
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto font-mono">
             Engineering-first projects featuring system architectures, metrics, and fully-functional live model playgrounds.
           </p>
         </div>
@@ -134,13 +250,13 @@ const Projects = () => {
         <div className="space-y-16">
 
           {/* PROJECT 1: EXPLAINABLE RAG QA */}
-          <div className="glass-panel border border-zinc-900 rounded-2xl overflow-hidden grid lg:grid-cols-12 gap-0">
+          <ProjectContainer>
 
             {/* Project Info Panel */}
-            <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-zinc-900">
+            <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/[0.04] z-10">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-mono bg-purple-950/40 text-purple-400 border border-purple-900/40 rounded px-2.5 py-0.5">
+                  <span className="text-[9px] font-mono bg-indigo-950/20 text-indigo-400 border border-indigo-900/30 rounded px-2.5 py-0.5">
                     RETRIEVAL ENGINE
                   </span>
                   <div className="flex gap-2">
@@ -148,35 +264,35 @@ const Projects = () => {
                       href="https://github.com/Shri-AI-ML/Explainable-RAG-QA-System"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-md hover:border-purple-500/20 text-zinc-400 hover:text-white transition-all"
+                      className="p-1.5 bg-white/[0.02] border border-white/[0.04] rounded-md hover:border-indigo-500/20 text-zinc-400 hover:text-white transition-all"
                     >
-                      <Github className="h-4 w-4" />
+                      <Github className="h-3.5 w-3.5" />
                     </a>
                   </div>
                 </div>
 
                 <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Explainable RAG QA System</h3>
-                <p className="text-xs font-mono text-zinc-500 mt-1">Python · FastAPI · ChromaDB · BM25 · Groq API · LangChain</p>
+                <p className="text-[10px] font-mono text-zinc-500 mt-1">Python · FastAPI · ChromaDB · BM25 · Groq API · LangChain</p>
 
                 {/* Tab Switcher */}
-                <div className="flex gap-2 border-b border-zinc-900 py-3 mt-4">
+                <div className="flex gap-2 border-b border-white/[0.04] py-3 mt-4">
                   <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, rag: 'specs' }))}
-                    className={`text-xs font-mono pb-1 border-b ${activeTabs.rag === 'specs' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+                    className={`text-[10px] font-mono pb-1 border-b cursor-pointer ${activeTabs.rag === 'specs' ? 'border-indigo-500 text-white font-semibold' : 'border-transparent text-zinc-550 hover:text-zinc-300'}`}
                   >
                     System Architecture
                   </button>
                   <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, rag: 'playground' }))}
-                    className={`text-xs font-mono pb-1 border-b flex items-center gap-1.5 ${activeTabs.rag === 'playground' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+                    className={`text-[10px] font-mono pb-1 border-b flex items-center gap-1.5 cursor-pointer ${activeTabs.rag === 'playground' ? 'border-indigo-500 text-white font-semibold' : 'border-transparent text-zinc-550 hover:text-zinc-300'}`}
                   >
-                    <Terminal className="h-3.5 w-3.5 text-purple-400" />
+                    <Terminal className="h-3.5 w-3.5 text-indigo-400" />
                     Live Playground
                   </button>
                 </div>
 
                 {/* Tab Contents */}
-                <div className="mt-4 min-h-[220px]">
+                <div className="mt-4 min-h-[200px]">
                   <AnimatePresence mode="wait">
                     {activeTabs.rag === 'specs' ? (
                       <motion.div
@@ -184,28 +300,28 @@ const Projects = () => {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="space-y-4 text-xs sm:text-sm text-zinc-400"
+                        className="space-y-4 text-xs text-zinc-400"
                       >
                         <div>
-                          <span className="text-zinc-200 font-semibold font-mono block">PROBLEM:</span>
+                          <span className="text-zinc-200 font-semibold font-mono block text-[10px]">PROBLEM:</span>
                           <p className="leading-relaxed">
                             Dense vectors capture semantic context but miss exact keyword identifiers (e.g., function names, model codes). Plain LLMs hallucinate sources.
                           </p>
                         </div>
                         <div>
-                          <span className="text-zinc-200 font-semibold font-mono block">ARCHITECTURE:</span>
+                          <span className="text-zinc-200 font-semibold font-mono block text-[10px]">ARCHITECTURE:</span>
                           <p className="leading-relaxed">
                             A hybrid retrieval chain routing queries via parallel pathways: BM25 (sparse tf-idf) + Sentence-Transformers (dense Cosine embeddings over ChromaDB). Merges scores linearly before Groq synthesis.
                           </p>
                         </div>
                         <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="p-2.5 bg-zinc-950 border border-zinc-900 rounded">
-                            <span className="text-zinc-500 font-mono block text-[9px] uppercase">Retrieval Latency</span>
-                            <span className="text-emerald-400 font-mono font-bold text-sm">~45ms at scale</span>
+                          <div className="p-2.5 bg-black/40 border border-white/[0.03] rounded">
+                            <span className="text-zinc-500 font-mono block text-[8px] uppercase">Retrieval Latency</span>
+                            <span className="text-emerald-400 font-mono font-bold text-xs">~45ms at scale</span>
                           </div>
-                          <div className="p-2.5 bg-zinc-950 border border-zinc-900 rounded">
-                            <span className="text-zinc-500 font-mono block text-[9px] uppercase">Context Grounding</span>
-                            <span className="text-indigo-400 font-mono font-bold text-sm">100% Attributed</span>
+                          <div className="p-2.5 bg-black/40 border border-white/[0.03] rounded">
+                            <span className="text-zinc-500 font-mono block text-[8px] uppercase">Context Grounding</span>
+                            <span className="text-indigo-400 font-mono font-bold text-xs">100% Attributed</span>
                           </div>
                         </div>
                       </motion.div>
@@ -215,15 +331,15 @@ const Projects = () => {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="space-y-4 text-xs font-mono text-zinc-400"
+                        className="space-y-4 text-xs font-mono text-zinc-450"
                       >
                         <p className="leading-normal text-zinc-500">
                           // Simulate the linear hybrid combination weights in real-time. Slide the Alpha parameter below to observe rank-reversal.
                         </p>
-                        <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-lg space-y-3">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-zinc-400">Hybrid Alpha Weight:</span>
-                            <span className="text-purple-400 font-bold">{hybridAlpha.toFixed(2)}</span>
+                        <div className="p-4 bg-black/40 border border-white/[0.03] rounded-lg space-y-3">
+                          <div className="flex justify-between items-center text-[10px]">
+                            <span className="text-zinc-400">Hybrid Alpha Weight (α):</span>
+                            <span className="text-indigo-400 font-bold">{hybridAlpha.toFixed(2)}</span>
                           </div>
                           <input
                             type="range"
@@ -232,9 +348,9 @@ const Projects = () => {
                             step="0.05"
                             value={hybridAlpha}
                             onChange={(e) => setHybridAlpha(parseFloat(e.target.value))}
-                            className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                            className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                           />
-                          <div className="flex justify-between text-[9px] text-zinc-600">
+                          <div className="flex justify-between text-[8px] text-zinc-650">
                             <span>100% BM25 (Keyword)</span>
                             <span>50/50 Balanced</span>
                             <span>100% Vector (Semantic)</span>
@@ -247,92 +363,117 @@ const Projects = () => {
               </div>
 
               {/* Specs Footer */}
-              <div className="pt-4 border-t border-zinc-900 text-[10px] sm:text-xs text-zinc-500 font-mono flex items-center justify-between">
+              <div className="pt-4 border-t border-white/[0.04] text-[9px] text-zinc-550 font-mono flex items-center justify-between">
                 <span>Scalability: Incremental indexing chunks</span>
                 <span>Future: Cohere Rerank integration</span>
               </div>
             </div>
 
             {/* Playground / Visual Panel */}
-            <div className="lg:col-span-6 p-6 sm:p-8 bg-[#09090b]/40 flex flex-col justify-center">
+            <div className="lg:col-span-6 p-6 sm:p-8 bg-white/[0.01] flex flex-col justify-center z-10">
               {activeTabs.rag === 'specs' ? (
                 /* Static Architecture Graph */
-                <div className="p-5 bg-[#030303] border border-zinc-900 rounded-xl space-y-4 font-mono text-xs">
-                  <span className="text-zinc-500 uppercase tracking-wider font-bold block text-[10px] border-b border-zinc-900 pb-2">Pipeline execution stack</span>
+                <div className="p-5 bg-black/50 border border-white/[0.03] rounded-xl space-y-3 font-mono text-[10px]">
+                  <span className="text-zinc-500 uppercase tracking-widest font-bold block text-[8px] border-b border-white/[0.03] pb-2">Pipeline execution stack</span>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-2 bg-zinc-950 border border-zinc-900 rounded">
+                    <div className="flex justify-between items-center p-2 bg-[#0a0a0f] border border-white/[0.03] rounded">
                       <span className="text-zinc-400">1. Input Query Parsing</span>
-                      <span className="text-purple-400">FastAPI</span>
+                      <span className="text-indigo-400 font-semibold">FastAPI</span>
                     </div>
-                    <div className="flex items-center justify-center text-zinc-600"><ChevronRight className="h-4 w-4 rotate-90" /></div>
+                    <div className="flex items-center justify-center text-zinc-700"><ChevronRight className="h-3.5 w-3.5 rotate-90" /></div>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="p-2 bg-zinc-950 border border-zinc-900 rounded text-center">
-                        <span className="text-zinc-500 block text-[9px]">BM25 (Sparse)</span>
+                      <div className="p-2 bg-[#0a0a0f] border border-white/[0.03] rounded text-center">
+                        <span className="text-zinc-500 block text-[8px]">BM25 (Sparse)</span>
                         <span className="text-amber-400">Keyword Index</span>
                       </div>
-                      <div className="p-2 bg-zinc-950 border border-zinc-900 rounded text-center">
-                        <span className="text-zinc-500 block text-[9px]">ChromaDB (Dense)</span>
-                        <span className="text-blue-400">Cosine Vector</span>
+                      <div className="p-2 bg-[#0a0a0f] border border-white/[0.03] rounded text-center">
+                        <span className="text-zinc-500 block text-[8px]">ChromaDB (Dense)</span>
+                        <span className="text-indigo-400">Cosine Vector</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-center text-zinc-600"><ChevronRight className="h-4 w-4 rotate-90" /></div>
-                    <div className="flex justify-between items-center p-2 bg-zinc-950 border border-zinc-900 rounded">
+                    <div className="flex items-center justify-center text-zinc-700"><ChevronRight className="h-3.5 w-3.5 rotate-90" /></div>
+                    <div className="flex justify-between items-center p-2 bg-[#0a0a0f] border border-white/[0.03] rounded">
                       <span className="text-zinc-400">2. Linear Hybrid Fusion</span>
                       <span className="text-emerald-400">Score Re-ranking</span>
                     </div>
-                    <div className="flex items-center justify-center text-zinc-600"><ChevronRight className="h-4 w-4 rotate-90" /></div>
-                    <div className="flex justify-between items-center p-2 bg-zinc-950 border border-zinc-900 rounded">
+                    <div className="flex items-center justify-center text-zinc-700"><ChevronRight className="h-3.5 w-3.5 rotate-90" /></div>
+                    <div className="flex justify-between items-center p-2 bg-[#0a0a0f] border border-white/[0.03] rounded">
                       <span className="text-zinc-400">3. Source-Attributed Answer</span>
-                      <span className="text-indigo-400">Groq LLM Generation</span>
+                      <span className="text-purple-400">Groq LLM Generation</span>
                     </div>
                   </div>
                 </div>
               ) : (
-                /* Dynamic Hybrid Search Results Playground */
+                /* Dynamic Hybrid Search Results Playground with segmented bar visualization */
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-mono font-bold uppercase text-zinc-500">Live Search Rank Output:</span>
-                    <span className="text-[10px] font-mono text-zinc-600">Query: "Pinnacle Labs"</span>
+                    <span className="text-[9px] font-mono font-bold uppercase text-zinc-500">Live Search Rank Output:</span>
+                    <span className="text-[9px] font-mono text-zinc-600">Query: "Pinnacle Labs"</span>
                   </div>
-                  <div className="space-y-2 font-mono text-xs">
-                    {sortedRAGResults.map((doc, idx) => (
-                      <div
-                        key={doc.id}
-                        className={`p-3 border rounded-lg transition-all duration-300 ${idx === 0
-                            ? 'bg-purple-950/15 border-purple-500/40 shadow-[0_0_15px_rgba(139,92,246,0.05)]'
-                            : 'bg-zinc-950/80 border-zinc-900'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className={`font-semibold text-xs ${idx === 0 ? 'text-purple-300' : 'text-zinc-400'}`}>
-                            #{idx + 1} {doc.title}
-                          </span>
-                          <span className={`text-[10px] border px-1.5 py-0.2 rounded ${idx === 0 ? 'bg-purple-500/20 border-purple-400 text-purple-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
-                            Score: {doc.score}
-                          </span>
+                  <div className="space-y-2.5 font-mono text-[10px]">
+                    {sortedRAGResults.map((doc, idx) => {
+                      const vectorPct = doc.denseMatch * hybridAlpha;
+                      const sparsePct = doc.sparseMatch * (1 - hybridAlpha);
+                      const sum = vectorPct + sparsePct;
+                      const vectorRatio = sum > 0 ? (vectorPct / sum) * 100 : 0;
+                      const sparseRatio = sum > 0 ? (sparsePct / sum) * 100 : 0;
+
+                      return (
+                        <div
+                          key={doc.id}
+                          className={`p-3.5 border rounded-lg transition-all duration-300 ${idx === 0
+                              ? 'bg-indigo-950/10 border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.08)]'
+                              : 'bg-[#0a0a0f] border-white/[0.03]'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className={`font-semibold text-xs ${idx === 0 ? 'text-indigo-300' : 'text-zinc-400'}`}>
+                              #{idx + 1} {doc.title}
+                            </span>
+                            <span className={`text-[9px] border px-1.5 py-0.2 rounded ${idx === 0 ? 'bg-indigo-500/20 border-indigo-400 text-indigo-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
+                              Score: {doc.score}
+                            </span>
+                          </div>
+                          
+                          <p className="text-[10px] text-zinc-500 leading-normal line-clamp-2 mb-2.5">{doc.snippet}</p>
+                          
+                          {/* Segmented Weight Progress Bar */}
+                          <div className="space-y-1">
+                            <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden flex">
+                              <div 
+                                className="bg-indigo-500 h-full transition-all duration-200"
+                                style={{ width: `${vectorRatio}%` }}
+                                title={`Vector component: ${vectorRatio.toFixed(1)}%`}
+                              />
+                              <div 
+                                className="bg-purple-500 h-full transition-all duration-200"
+                                style={{ width: `${sparseRatio}%` }}
+                                title={`BM25 component: ${sparseRatio.toFixed(1)}%`}
+                              />
+                            </div>
+                            <div className="flex justify-between text-[8px] text-zinc-600">
+                              <span>Vector Weight: {vectorPct.toFixed(3)}</span>
+                              <span>BM25 Weight: {sparsePct.toFixed(3)}</span>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-zinc-500 leading-normal line-clamp-2">{doc.snippet}</p>
-                        <div className="flex gap-3 text-[9px] mt-2 text-zinc-600">
-                          <span>Vector similarity: {(doc.denseMatch * hybridAlpha).toFixed(3)}</span>
-                          <span>BM25 relevance: {(doc.sparseMatch * (1 - hybridAlpha)).toFixed(3)}</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
 
-          </div>
+          </ProjectContainer>
 
           {/* PROJECT 2: HEART DISEASE ENSEMBLE */}
-          <div className="glass-panel border border-zinc-900 rounded-2xl overflow-hidden grid lg:grid-cols-12 gap-0">
+          <ProjectContainer>
 
             {/* Project Info Panel */}
-            <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-zinc-900">
+            <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/[0.04] z-10">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-mono bg-indigo-950/40 text-indigo-400 border border-indigo-900/40 rounded px-2.5 py-0.5">
+                  <span className="text-[9px] font-mono bg-purple-950/20 text-purple-400 border border-purple-900/30 rounded px-2.5 py-0.5">
                     DIAGNOSTIC ENSEMBLE
                   </span>
                   <div className="flex gap-2">
@@ -340,35 +481,35 @@ const Projects = () => {
                       href="https://github.com/Shri-AI-ML/Heart-Disease-Prediction"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-md hover:border-purple-500/20 text-zinc-400 hover:text-white transition-all"
+                      className="p-1.5 bg-white/[0.02] border border-white/[0.04] rounded-md hover:border-indigo-500/20 text-zinc-400 hover:text-white transition-all"
                     >
-                      <Github className="h-4 w-4" />
+                      <Github className="h-3.5 w-3.5" />
                     </a>
                   </div>
                 </div>
 
                 <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Heart Disease Prediction System</h3>
-                <p className="text-xs font-mono text-zinc-500 mt-1">Python · Scikit-learn · XGBoost · FastAPI · Streamlit · ChromaDB</p>
+                <p className="text-[10px] font-mono text-zinc-500 mt-1">Python · Scikit-learn · XGBoost · FastAPI · Streamlit · ChromaDB</p>
 
                 {/* Tab Switcher */}
-                <div className="flex gap-2 border-b border-zinc-900 py-3 mt-4">
+                <div className="flex gap-2 border-b border-white/[0.04] py-3 mt-4">
                   <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, heart: 'specs' }))}
-                    className={`text-xs font-mono pb-1 border-b ${activeTabs.heart === 'specs' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+                    className={`text-[10px] font-mono pb-1 border-b cursor-pointer ${activeTabs.heart === 'specs' ? 'border-indigo-500 text-white font-semibold' : 'border-transparent text-zinc-550 hover:text-zinc-300'}`}
                   >
                     System Architecture
                   </button>
                   <button
                     onClick={() => setActiveTabs(prev => ({ ...prev, heart: 'playground' }))}
-                    className={`text-xs font-mono pb-1 border-b flex items-center gap-1.5 ${activeTabs.heart === 'playground' ? 'border-purple-500 text-white font-semibold' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+                    className={`text-[10px] font-mono pb-1 border-b flex items-center gap-1.5 cursor-pointer ${activeTabs.heart === 'playground' ? 'border-indigo-500 text-white font-semibold' : 'border-transparent text-zinc-550 hover:text-zinc-300'}`}
                   >
-                    <Activity className="h-3.5 w-3.5 text-purple-400" />
+                    <Activity className="h-3.5 w-3.5 text-indigo-400" />
                     Live Playground
                   </button>
                 </div>
 
                 {/* Tab Contents */}
-                <div className="mt-4 min-h-[220px]">
+                <div className="mt-4 min-h-[200px]">
                   <AnimatePresence mode="wait">
                     {activeTabs.heart === 'specs' ? (
                       <motion.div
@@ -376,28 +517,28 @@ const Projects = () => {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="space-y-4 text-xs sm:text-sm text-zinc-400"
+                        className="space-y-4 text-xs text-zinc-400"
                       >
                         <div>
-                          <span className="text-zinc-200 font-semibold font-mono block">PROBLEM:</span>
+                          <span className="text-zinc-200 font-semibold font-mono block text-[10px]">PROBLEM:</span>
                           <p className="leading-relaxed">
                             Single classifiers suffer from generalization gaps on medical diagnostic datasets. Black-box models cannot offer explanations of decision boundaries.
                           </p>
                         </div>
                         <div>
-                          <span className="text-zinc-200 font-semibold font-mono block">SOLUTION:</span>
+                          <span className="text-zinc-200 font-semibold font-mono block text-[10px]">SOLUTION:</span>
                           <p className="leading-relaxed">
                             Stacked Generalization combining Level-0 classifiers (Random Forest + XGBoost + Logistic Regression) via a meta-learner. Integrated local RAG for contextual patient file reference.
                           </p>
                         </div>
                         <div className="grid grid-cols-2 gap-3 pt-2">
-                          <div className="p-2.5 bg-zinc-950 border border-zinc-900 rounded">
-                            <span className="text-zinc-500 font-mono block text-[9px] uppercase">Ensemble Accuracy</span>
-                            <span className="text-emerald-400 font-mono font-bold text-sm">89.13% Cross-Validated</span>
+                          <div className="p-2.5 bg-black/40 border border-white/[0.03] rounded">
+                            <span className="text-zinc-500 font-mono block text-[8px] uppercase">Ensemble Accuracy</span>
+                            <span className="text-emerald-400 font-mono font-bold text-xs">89.13% Cross-Validated</span>
                           </div>
-                          <div className="p-2.5 bg-zinc-950 border border-zinc-900 rounded">
-                            <span className="text-zinc-500 font-mono block text-[9px] uppercase">Generalization AUC</span>
-                            <span className="text-indigo-400 font-mono font-bold text-sm">0.94 ROC-AUC Score</span>
+                          <div className="p-2.5 bg-black/40 border border-white/[0.03] rounded">
+                            <span className="text-zinc-500 font-mono block text-[8px] uppercase">Generalization AUC</span>
+                            <span className="text-indigo-400 font-mono font-bold text-xs">0.94 ROC-AUC Score</span>
                           </div>
                         </div>
                       </motion.div>
@@ -407,13 +548,13 @@ const Projects = () => {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="space-y-3.5 text-xs font-mono text-zinc-400"
+                        className="space-y-3.5 text-xs font-mono text-zinc-450"
                       >
                         <p className="text-zinc-500">// Configure the patient metrics slider to trigger the stacking generalizer inference pipeline.</p>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3.5">
                           <div className="space-y-1">
-                            <span className="text-[10px] text-zinc-500">Patient Age ({patientAge})</span>
+                            <span className="text-[9px] text-zinc-500">Patient Age ({patientAge})</span>
                             <input
                               type="range" min="30" max="80" value={patientAge}
                               onChange={(e) => setPatientAge(parseInt(e.target.value))}
@@ -421,7 +562,7 @@ const Projects = () => {
                             />
                           </div>
                           <div className="space-y-1">
-                            <span className="text-[10px] text-zinc-500">Cholesterol ({patientChol} mg/dL)</span>
+                            <span className="text-[9px] text-zinc-500">Cholesterol ({patientChol} mg/dL)</span>
                             <input
                               type="range" min="150" max="380" value={patientChol}
                               onChange={(e) => setPatientChol(parseInt(e.target.value))}
@@ -429,7 +570,7 @@ const Projects = () => {
                             />
                           </div>
                           <div className="space-y-1">
-                            <span className="text-[10px] text-zinc-500">Max Heart Rate ({patientHR} bpm)</span>
+                            <span className="text-[9px] text-zinc-500">Max Heart Rate ({patientHR} bpm)</span>
                             <input
                               type="range" min="90" max="200" value={patientHR}
                               onChange={(e) => setPatientHR(parseInt(e.target.value))}
@@ -437,17 +578,17 @@ const Projects = () => {
                             />
                           </div>
                           <div className="flex flex-col justify-center">
-                            <span className="text-[10px] text-zinc-500 mb-1">Exercise Angina</span>
+                            <span className="text-[9px] text-zinc-500 mb-1">Exercise Angina</span>
                             <div className="flex gap-2">
                               <button
                                 onClick={() => setAngina(true)}
-                                className={`px-2 py-0.5 border text-[10px] rounded ${angina ? 'bg-indigo-950 border-indigo-500 text-indigo-300' : 'bg-zinc-950 border-zinc-900 text-zinc-500'}`}
+                                className={`px-2 py-0.5 border text-[9px] rounded cursor-pointer ${angina ? 'bg-indigo-950/40 border-indigo-500 text-indigo-300' : 'bg-[#0a0a0f] border-white/[0.03] text-zinc-500'}`}
                               >
                                 Yes
                               </button>
                               <button
                                 onClick={() => setAngina(false)}
-                                className={`px-2 py-0.5 border text-[10px] rounded ${!angina ? 'bg-indigo-950 border-indigo-500 text-indigo-300' : 'bg-zinc-950 border-zinc-900 text-zinc-500'}`}
+                                className={`px-2 py-0.5 border text-[9px] rounded cursor-pointer ${!angina ? 'bg-indigo-950/40 border-indigo-500 text-indigo-300' : 'bg-[#0a0a0f] border-white/[0.03] text-zinc-500'}`}
                               >
                                 No
                               </button>
@@ -458,7 +599,7 @@ const Projects = () => {
                         <button
                           onClick={runHeartInference}
                           disabled={evaluating}
-                          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[11px] font-semibold py-2 rounded-md transition-colors shadow-[0_0_15px_rgba(99,102,241,0.2)] cursor-pointer"
+                          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[10px] font-semibold py-2.5 rounded-md transition-colors shadow-[0_0_15px_rgba(99,102,241,0.15)] cursor-pointer"
                         >
                           {evaluating ? "Evaluating Stacked Generalization..." : "Evaluate Stacking Generalization"}
                         </button>
@@ -469,49 +610,49 @@ const Projects = () => {
               </div>
 
               {/* Specs Footer */}
-              <div className="pt-4 border-t border-zinc-900 text-[10px] sm:text-xs text-zinc-500 font-mono flex items-center justify-between">
+              <div className="pt-4 border-t border-white/[0.04] text-[9px] text-zinc-550 font-mono flex items-center justify-between">
                 <span>Scalability: Decoupled REST microservices</span>
                 <span>Future: SHAP value feature mapping</span>
               </div>
             </div>
 
             {/* Playground / Visual Panel */}
-            <div className="lg:col-span-6 p-6 sm:p-8 bg-[#09090b]/40 flex flex-col justify-center">
+            <div className="lg:col-span-6 p-6 sm:p-8 bg-white/[0.01] flex flex-col justify-center z-10">
               {activeTabs.heart === 'specs' ? (
                 /* Static Architecture Graph */
-                <div className="p-5 bg-[#030303] border border-zinc-900 rounded-xl space-y-4 font-mono text-xs">
-                  <span className="text-zinc-500 uppercase tracking-wider font-bold block text-[10px] border-b border-zinc-900 pb-2">Stacked Generalizer Architecture</span>
+                <div className="p-5 bg-black/50 border border-white/[0.03] rounded-xl space-y-4 font-mono text-[10px]">
+                  <span className="text-zinc-500 uppercase tracking-widest font-bold block text-[8px] border-b border-white/[0.03] pb-2">Stacked Generalizer Architecture</span>
                   <div className="space-y-3.5">
-                    <div className="p-2 bg-zinc-950 border border-zinc-900 rounded text-center">
+                    <div className="p-2 bg-[#0a0a0f] border border-white/[0.03] rounded text-center">
                       <span className="text-zinc-400">Raw Data Tensors</span>
-                      <span className="text-[10px] text-zinc-500 block">Age, Chol, MaxHR, Angina</span>
+                      <span className="text-[9px] text-zinc-500 block">Age, Chol, MaxHR, Angina</span>
                     </div>
-                    <div className="flex items-center justify-center text-zinc-600"><ChevronRight className="h-4 w-4 rotate-90" /></div>
+                    <div className="flex items-center justify-center text-zinc-700"><ChevronRight className="h-3.5 w-3.5 rotate-90" /></div>
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="p-2 bg-zinc-950 border border-zinc-900 rounded text-center">
-                        <span className="text-[9px] text-zinc-500 block">Level-0</span>
+                      <div className="p-2 bg-[#0a0a0f] border border-white/[0.03] rounded text-center">
+                        <span className="text-[8px] text-zinc-500 block">Level-0</span>
                         <span className="text-indigo-400 font-semibold">RandomForest</span>
                       </div>
-                      <div className="p-2 bg-zinc-950 border border-zinc-900 rounded text-center">
-                        <span className="text-[9px] text-zinc-500 block">Level-0</span>
-                        <span className="text-blue-400 font-semibold">XGBoost</span>
+                      <div className="p-2 bg-[#0a0a0f] border border-white/[0.03] rounded text-center">
+                        <span className="text-[8px] text-zinc-500 block">Level-0</span>
+                        <span className="text-purple-400 font-semibold">XGBoost</span>
                       </div>
-                      <div className="p-2 bg-zinc-950 border border-zinc-900 rounded text-center">
-                        <span className="text-[9px] text-zinc-500 block">Level-0</span>
-                        <span className="text-purple-400 font-semibold">LogReg</span>
+                      <div className="p-2 bg-[#0a0a0f] border border-white/[0.03] rounded text-center">
+                        <span className="text-[8px] text-zinc-500 block">Level-0</span>
+                        <span className="text-emerald-400 font-semibold">LogReg</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-center text-zinc-600"><ChevronRight className="h-4 w-4 rotate-90" /></div>
-                    <div className="p-2 bg-zinc-950 border border-zinc-900 rounded text-center">
-                      <span className="text-zinc-500 block text-[9px]">Level-1 Meta-Learner</span>
-                      <span className="text-emerald-400 font-bold">Logistic Regression Classifier</span>
+                    <div className="flex items-center justify-center text-zinc-700"><ChevronRight className="h-3.5 w-3.5 rotate-90" /></div>
+                    <div className="p-2 bg-[#0a0a0f] border border-white/[0.03] rounded text-center">
+                      <span className="text-zinc-550 block text-[8px]">Level-1 Meta-Learner</span>
+                      <span className="text-indigo-400 font-bold">Logistic Regression Classifier</span>
                     </div>
                   </div>
                 </div>
               ) : (
-                /* Dynamic Playground Output logs & predictions */
-                <div className="space-y-4 font-mono text-xs">
-                  <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-lg h-[130px] overflow-y-auto space-y-1.5 text-[10px] text-zinc-400 terminal-scroll">
+                /* Dynamic Playground Output logs & EKG simulation */
+                <div className="space-y-4 font-mono text-[10px]">
+                  <div className="p-3 bg-black/60 border border-white/[0.03] rounded-lg h-[125px] overflow-y-auto space-y-1.5 text-[9px] text-zinc-400 terminal-scroll">
                     {evalLogs.map((log, lIdx) => (
                       <div key={lIdx} className="leading-relaxed">
                         {log.startsWith('Risk') || log.startsWith('Ensemble') ? (
@@ -519,7 +660,7 @@ const Projects = () => {
                         ) : log.includes('Estimator') ? (
                           <span className="text-purple-400">{log}</span>
                         ) : (
-                          <span className="text-zinc-500">{log}</span>
+                          <span className="text-zinc-550">{log}</span>
                         )}
                       </div>
                     ))}
@@ -534,25 +675,28 @@ const Projects = () => {
                     )}
                   </div>
 
+                  {/* EKG heartbeat canvas simulation */}
+                  <EKGCanvas riskScore={predResult ? predResult.risk : 20} />
+
                   {predResult && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className={`p-4 border rounded-lg flex items-center justify-between gap-4 ${predResult.risk > 50
-                          ? 'bg-red-950/20 border-red-500/30'
-                          : 'bg-emerald-950/20 border-emerald-500/30'
+                      className={`p-3.5 border rounded-lg flex items-center justify-between gap-4 ${predResult.risk > 50
+                          ? 'bg-red-950/10 border-red-500/30'
+                          : 'bg-emerald-950/10 border-emerald-500/30'
                         }`}
                     >
                       <div>
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-wider block font-bold">Ensemble Diagnostic Output:</span>
-                        <span className={`text-base font-black ${predResult.risk > 50 ? 'text-red-400' : 'text-emerald-400'}`}>
+                        <span className="text-[8px] text-zinc-500 uppercase tracking-wider block font-bold">Ensemble Diagnostic Output:</span>
+                        <span className={`text-sm font-extrabold ${predResult.risk > 50 ? 'text-red-400' : 'text-emerald-400'}`}>
                           {predResult.risk}% Risk Probability
                         </span>
-                        <p className="text-[10px] text-zinc-400 mt-0.5">Classification: {predResult.classification}</p>
+                        <p className="text-[9px] text-zinc-400 mt-0.5">Classification: {predResult.classification}</p>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] text-zinc-500 block uppercase font-bold">Primary Risk Contributor:</span>
-                        <span className="text-[10px] text-zinc-300 font-semibold">{predResult.contributor}</span>
+                        <span className="text-[8px] text-zinc-500 block uppercase font-bold">Primary Contributor:</span>
+                        <span className="text-[9px] text-zinc-300 font-semibold">{predResult.contributor}</span>
                       </div>
                     </motion.div>
                   )}
@@ -560,7 +704,7 @@ const Projects = () => {
               )}
             </div>
 
-          </div>
+          </ProjectContainer>
 
         </div>
 

@@ -1,6 +1,85 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Calendar, Clock, Terminal, ChevronDown, ChevronUp, Cpu, Heart } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Terminal, ChevronDown, ChevronUp } from 'lucide-react';
+import { use3DTilt } from '../hooks/use3DTilt';
+
+const LogCard = ({ log, isExpanded, handleToggle }) => {
+  const { tiltStyle, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(3, 1.008);
+
+  return (
+    <div 
+      style={tiltStyle}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="glass-panel border border-white/[0.04] rounded-xl overflow-hidden hover:border-white/[0.08] transition-all bg-[#0e0e14]/40 relative shadow-md"
+    >
+      <div style={{ ...glareStyle, position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }} />
+
+      {/* Clickable Header */}
+      <div 
+        onClick={() => handleToggle(log.id)}
+        className="p-6 flex items-start justify-between gap-6 cursor-pointer select-none z-10 relative"
+      >
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono">
+            <span className="text-indigo-400 font-semibold">{log.category}</span>
+            <span className="text-zinc-550 flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5" /> {log.date}
+            </span>
+            <span className="text-zinc-550 flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" /> {log.readTime}
+            </span>
+          </div>
+          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight hover:text-indigo-400 transition-colors">
+            {log.title}
+          </h3>
+          <p className="text-xs text-zinc-400 leading-relaxed max-w-3xl font-normal">
+            {log.summary}
+          </p>
+        </div>
+        
+        <div className="text-zinc-500 shrink-0 mt-1 cursor-pointer">
+          {isExpanded ? <ChevronUp className="h-4.5 w-4.5" /> : <ChevronDown className="h-4.5 w-4.5" />}
+        </div>
+      </div>
+
+      {/* Expandable Details */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: 'auto' }}
+            exit={{ height: 0 }}
+            className="overflow-hidden border-t border-white/[0.04] bg-white/[0.01] z-10 relative"
+          >
+            <div className="p-6 space-y-6 text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
+              
+              {/* Text explanation */}
+              <div className="whitespace-pre-line text-zinc-400 text-[11px] sm:text-xs">
+                {log.details}
+              </div>
+
+              {/* Code Box */}
+              <div className="p-4 bg-[#050508]/90 border border-white/[0.03] rounded-lg space-y-2.5">
+                <div className="flex items-center justify-between text-[8px] font-mono text-zinc-500 uppercase tracking-widest border-b border-white/[0.03] pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Terminal className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>python code snippet</span>
+                  </div>
+                  <span>Active implementation</span>
+                </div>
+                <pre className="text-[11px] font-mono text-indigo-200 overflow-x-auto p-1 leading-normal">
+                  <code>{log.code}</code>
+                </pre>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 const ResearchLogs = () => {
   const [expandedLog, setExpandedLog] = useState(null);
@@ -72,97 +151,33 @@ splitter = RecursiveCharacterTextSplitter(
   };
 
   return (
-    <section id="research-logs" className="py-16 md:py-24 border-t border-zinc-900 relative">
+    <section id="research-logs" className="py-20 border-t border-white/[0.04] relative">
       <div className="max-w-4xl mx-auto">
         
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-3 py-1 rounded-full text-xs text-zinc-400 font-mono mb-4">
-            <BookOpen className="h-3.5 w-3.5 text-purple-400" />
+          <div className="inline-flex items-center gap-2 border border-white/[0.04] bg-[#0e0e14] px-3 py-1 rounded-full text-[10px] text-zinc-400 font-mono mb-4">
+            <BookOpen className="h-3.5 w-3.5 text-indigo-400" />
             <span>/system/research_logs</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
             RESEARCH & BUILD LOGS
           </h2>
-          <p className="text-sm text-zinc-400 max-w-xl mx-auto font-mono">
+          <p className="text-xs sm:text-sm text-zinc-450 max-w-xl mx-auto font-mono">
             Detailed engineering investigations, performance benchmarks, and diagnostic research.
           </p>
         </div>
 
         {/* Logs List */}
-        <div className="space-y-6">
-          {logs.map((log) => {
-            const isExpanded = expandedLog === log.id;
-            return (
-              <div 
-                key={log.id} 
-                className="glass-panel border border-zinc-900 rounded-xl overflow-hidden hover:border-zinc-800/80 transition-all"
-              >
-                {/* Clickable Header */}
-                <div 
-                  onClick={() => handleToggle(log.id)}
-                  className="p-6 flex items-start justify-between gap-6 cursor-pointer select-none"
-                >
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-                      <span className="text-purple-400">{log.category}</span>
-                      <span className="text-zinc-600 flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" /> {log.date}
-                      </span>
-                      <span className="text-zinc-600 flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" /> {log.readTime}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-bold text-white tracking-tight hover:text-purple-400 transition-colors">
-                      {log.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-3xl">
-                      {log.summary}
-                    </p>
-                  </div>
-                  
-                  <div className="text-zinc-500 shrink-0 mt-1">
-                    {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </div>
-                </div>
-
-                {/* Expandable Details */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: 'auto' }}
-                      exit={{ height: 0 }}
-                      className="overflow-hidden border-t border-zinc-900 bg-zinc-950/20"
-                    >
-                      <div className="p-6 space-y-6 text-sm text-zinc-400 leading-relaxed font-normal">
-                        
-                        {/* Text explanation */}
-                        <div className="whitespace-pre-line">
-                          {log.details}
-                        </div>
-
-                        {/* Code Box */}
-                        <div className="p-4 bg-[#030303] border border-zinc-900 rounded-lg space-y-2.5">
-                          <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 uppercase tracking-wider border-b border-zinc-900 pb-2">
-                            <div className="flex items-center gap-1.5">
-                              <Terminal className="h-3.5 w-3.5 text-purple-400" />
-                              <span>python code snippet</span>
-                            </div>
-                            <span>Active implementation</span>
-                          </div>
-                          <pre className="text-xs font-mono text-purple-200 overflow-x-auto p-1 leading-normal">
-                            <code>{log.code}</code>
-                          </pre>
-                        </div>
-
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+        <div className="space-y-5">
+          {logs.map((log) => (
+            <LogCard 
+              key={log.id} 
+              log={log} 
+              isExpanded={expandedLog === log.id}
+              handleToggle={handleToggle}
+            />
+          ))}
         </div>
 
       </div>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Send, Terminal, ShieldAlert, CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Mail, Send, Terminal, ShieldAlert, CheckCircle, AlertTriangle, AlertCircle, Cpu } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import confetti from 'canvas-confetti';
+import { use3DTilt } from '../hooks/use3DTilt';
 
 const Github = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -27,6 +28,10 @@ const Contact = () => {
   const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  // 3D tilt effects for the form container
+  const formTilt = use3DTilt(2, 1.002);
+  const infoTilt = use3DTilt(3, 1.005);
+
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -44,20 +49,19 @@ const Contact = () => {
 
     const { name, email, message } = formData;
 
-    // Reset States
     setSubmitted(false);
     setLogs(["[SYSTEM] Initializing client validation checks..."]);
 
     // 1. Client-side Validation Checks
     if (!name.trim() || !email.trim() || !message.trim()) {
-      const errorMsg = "[ERROR] Required fields are missing.";
+      const errorMsg = "[ERROR] Required fields are missing. Validation aborted.";
       setLogs(prev => [...prev, errorMsg]);
       showToast("Please fill in all fields.", "error");
       return;
     }
 
     if (!validateEmail(email)) {
-      const errorMsg = "[ERROR] Invalid sender email syntax format.";
+      const errorMsg = "[ERROR] Invalid sender email syntax format. Hook rejected.";
       setLogs(prev => [...prev, errorMsg]);
       showToast("Please provide a valid email address.", "error");
       return;
@@ -101,11 +105,6 @@ const Contact = () => {
     const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
     const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-    // Temporary console log debugging (safely masked)
-    console.log("[EmailJS Debug] Service ID:", serviceId ? `${serviceId.substring(0, 8)}***` : "UNDEFINED");
-    console.log("[EmailJS Debug] Template ID:", templateId ? `${templateId.substring(0, 8)}***` : "UNDEFINED");
-    console.log("[EmailJS Debug] Public Key:", publicKey ? `${publicKey.substring(0, 8)}***` : "UNDEFINED");
 
     const isSandboxFallback =
       !serviceId ||
@@ -156,7 +155,6 @@ const Contact = () => {
         "4. Initiating REST socket to api.emailjs.com gateway...",
       ]);
 
-      // Template variable names match exactly the user specification
       const templateParams = {
         from_name: name,
         from_email: email,
@@ -164,11 +162,7 @@ const Contact = () => {
         time: new Date().toLocaleString()
       };
 
-      console.log("[EmailJS Debug] Dispatching parameters payload:", templateParams);
-
       const result = await emailjs.send(serviceId, templateId, templateParams, publicKey);
-
-      console.log("[EmailJS Debug] Full raw API response received:", result);
 
       if (result.status === 200) {
         setLogs(prev => [
@@ -191,11 +185,10 @@ const Contact = () => {
           colors: ['#a78bfa', '#818cf8', '#34d399']
         });
       } else {
-        throw new Error(`Invalid status response code: ${result.status} (Text: ${result.text})`);
+        throw new Error(`Invalid status response code: ${result.status}`);
       }
 
     } catch (error) {
-      console.error("[EmailJS Debug] Dispatch error caught:", error);
       const errorStr = error?.text || error?.message || "Unknown API transport error";
       setLogs(prev => [
         ...prev,
@@ -208,18 +201,18 @@ const Contact = () => {
   };
 
   return (
-    <section id="contact" className="py-16 md:py-24 border-t border-zinc-900 relative">
-      <div className="absolute inset-0 bg-dot-grid opacity-20 pointer-events-none" />
+    <section id="contact" className="py-20 border-t border-white/[0.04] relative">
+      <div className="absolute inset-0 bg-dot-grid opacity-15 pointer-events-none" />
       <div className="max-w-5xl mx-auto relative z-10">
 
         {/* Dynamic Toast Notifications */}
         <AnimatePresence>
           {toast.show && (
             <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 border px-4 py-3 rounded-lg shadow-xl font-mono text-xs max-w-sm backdrop-blur-md ${toast.type === 'success'
+              exit={{ opacity: 0, y: 15, scale: 0.95 }}
+              className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 border px-4.5 py-3 rounded-xl shadow-2xl font-mono text-[10px] max-w-sm backdrop-blur-md ${toast.type === 'success'
                 ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400'
                 : toast.type === 'warning'
                   ? 'bg-amber-950/90 border-amber-500/30 text-amber-400'
@@ -236,14 +229,14 @@ const Contact = () => {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-3 py-1 rounded-full text-xs text-zinc-400 font-mono mb-4">
-            <Mail className="h-3.5 w-3.5 text-purple-400" />
+          <div className="inline-flex items-center gap-2 border border-white/[0.04] bg-[#0e0e14] px-3 py-1 rounded-full text-[10px] text-zinc-400 font-mono mb-4">
+            <Mail className="h-3.5 w-3.5 text-indigo-400" />
             <span>/system/gateway</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
             LET'S COLLABORATE
           </h2>
-          <p className="text-sm text-zinc-400 max-w-xl mx-auto font-mono">
+          <p className="text-xs sm:text-sm text-zinc-450 max-w-xl mx-auto font-mono">
             Get in touch for internships, research, hackathons, or system building.
           </p>
         </div>
@@ -251,19 +244,29 @@ const Contact = () => {
         <div className="grid md:grid-cols-12 gap-8 items-stretch">
 
           {/* Contact Details & Links */}
-          <div className="md:col-span-5 space-y-6 flex flex-col justify-between">
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white tracking-tight">System Endpoints</h3>
-              <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
+          <div 
+            style={infoTilt.tiltStyle}
+            onMouseMove={infoTilt.handleMouseMove}
+            onMouseLeave={infoTilt.handleMouseLeave}
+            className="md:col-span-5 space-y-6 flex flex-col justify-between p-6 bg-[#0e0e14]/40 border border-white/[0.04] rounded-xl relative overflow-hidden select-none shadow-md"
+          >
+            <div style={{ ...infoTilt.glareStyle, position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }} />
+            
+            <div className="space-y-6 z-10 relative">
+              <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <Cpu className="h-4.5 w-4.5 text-indigo-400" />
+                <span>System Endpoints</span>
+              </h3>
+              <p className="text-xs text-zinc-450 leading-relaxed font-normal">
                 Looking to build something impactful with AI? Drop a line to discuss retrieval system optimization, model generalization stacking, or FastAPI integrations. Always open to high-impact projects.
               </p>
 
-              <div className="space-y-4 font-mono text-xs">
+              <div className="space-y-3 font-mono text-[10px]">
                 <a
                   href="mailto:goswamivansh999@gmail.com"
-                  className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
+                  className="flex items-center gap-3 p-3 bg-black/40 border border-white/[0.03] rounded-lg hover:border-indigo-500/30 transition-all text-zinc-400 hover:text-white"
                 >
-                  <Mail className="h-4 w-4 text-purple-400" />
+                  <Mail className="h-4 w-4 text-indigo-450" />
                   <span>goswamivansh999@gmail.com</span>
                 </a>
 
@@ -271,35 +274,42 @@ const Contact = () => {
                   href="https://www.linkedin.com/in/shrijal-goswami"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
+                  className="flex items-center gap-3 p-3 bg-black/40 border border-white/[0.03] rounded-lg hover:border-indigo-500/30 transition-all text-zinc-400 hover:text-white"
                 >
-                  <Linkedin className="h-4 w-4 text-purple-400" />
-                  <span>https://www.linkedin.com/in/shrijal-goswami</span>
+                  <Linkedin className="h-4 w-4 text-indigo-455" />
+                  <span>linkedin.com/in/shrijal-goswami</span>
                 </a>
 
                 <a
                   href="https://github.com/Shri-AI-ML"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-zinc-950 border border-zinc-900 rounded-lg hover:border-purple-500/30 transition-all text-zinc-400 hover:text-white"
+                  className="flex items-center gap-3 p-3 bg-black/40 border border-white/[0.03] rounded-lg hover:border-indigo-500/30 transition-all text-zinc-400 hover:text-white"
                 >
-                  <Github className="h-4 w-4 text-purple-400" />
+                  <Github className="h-4 w-4 text-indigo-455" />
                   <span>github.com/Shri-AI-ML</span>
                 </a>
               </div>
             </div>
 
-            <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl text-center">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1">Response Latency</span>
-              <span className="text-sm font-mono font-bold text-emerald-400">&lt; 12 hours (High priority)</span>
+            <div className="p-3 bg-black/40 border border-white/[0.03] rounded-lg text-center z-10 relative">
+              <span className="text-[8px] font-mono text-zinc-550 uppercase tracking-widest block mb-1">Response Latency</span>
+              <span className="text-xs font-mono font-bold text-emerald-450">&lt; 12 hours (High priority)</span>
             </div>
           </div>
 
           {/* Contact Form & Console */}
           <div className="md:col-span-7 flex flex-col justify-between space-y-6">
-            <form onSubmit={handleSubmit} className="glass-panel border border-zinc-900 rounded-xl p-6 space-y-4">
+            <form 
+              style={formTilt.tiltStyle}
+              onMouseMove={formTilt.handleMouseMove}
+              onMouseLeave={formTilt.handleMouseLeave}
+              onSubmit={handleSubmit} 
+              className="glass-panel border border-white/[0.04] rounded-xl p-6 space-y-4 relative overflow-hidden select-none bg-[#0e0e14]/40 shadow-md"
+            >
+              <div style={{ ...formTilt.glareStyle, position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }} />
 
-              {/* Spam Prevention Honeypot Field */}
+              {/* Bot Trap Honey Pot */}
               <input
                 type="text"
                 name="bot_trap"
@@ -310,9 +320,9 @@ const Contact = () => {
                 tabIndex="-1"
               />
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-4 z-10 relative">
                 <div className="space-y-1.5">
-                  <label htmlFor="from_name" className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Name</label>
+                  <label htmlFor="from_name" className="text-[9px] font-mono text-zinc-550 uppercase tracking-wider block">Your Name</label>
                   <input
                     id="from_name"
                     type="text"
@@ -322,11 +332,11 @@ const Contact = () => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Alice Dev"
                     disabled={submitting}
-                    className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors disabled:opacity-50"
+                    className="w-full bg-black/30 border border-white/[0.03] rounded-lg p-2.5 text-xs outline-none text-zinc-200 focus:border-indigo-500/40 transition-colors disabled:opacity-50"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="from_email" className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Your Email</label>
+                  <label htmlFor="from_email" className="text-[9px] font-mono text-zinc-550 uppercase tracking-wider block">Your Email</label>
                   <input
                     id="from_email"
                     type="email"
@@ -336,13 +346,13 @@ const Contact = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="alice@domain.com"
                     disabled={submitting}
-                    className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors disabled:opacity-50"
+                    className="w-full bg-black/30 border border-white/[0.03] rounded-lg p-2.5 text-xs outline-none text-zinc-200 focus:border-indigo-500/40 transition-colors disabled:opacity-50"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="message" className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block">Payload / Message</label>
+              <div className="space-y-1.5 z-10 relative">
+                <label htmlFor="message" className="text-[9px] font-mono text-zinc-550 uppercase tracking-wider block">Payload / Message</label>
                 <textarea
                   id="message"
                   name="message"
@@ -352,31 +362,31 @@ const Contact = () => {
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   placeholder="Hey Shrijal, let's connect regarding a RAG system optimization project..."
                   disabled={submitting}
-                  className="w-full bg-[#030303]/80 border border-zinc-900 rounded-lg p-2.5 text-sm outline-none text-zinc-200 focus:border-purple-500/40 transition-colors resize-none disabled:opacity-50"
+                  className="w-full bg-black/30 border border-white/[0.03] rounded-lg p-2.5 text-xs outline-none text-zinc-200 focus:border-indigo-500/40 transition-colors resize-none disabled:opacity-50"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.2)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[10px] font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(99,102,241,0.15)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer z-10 relative"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-3.5 w-3.5" />
                 <span>{submitting ? "Transmitting payload..." : "Send Secure Message"}</span>
               </button>
             </form>
 
             {/* Submission Terminal Logger Output */}
-            <div className="glass-panel border border-zinc-900 rounded-xl p-4 font-mono text-xs h-[130px] flex flex-col justify-between">
-              <div className="flex items-center justify-between text-[9px] text-zinc-500 border-b border-zinc-900/60 pb-1.5 mb-1.5 uppercase font-bold">
+            <div className="glass-panel border border-white/[0.04] rounded-xl p-4 font-mono text-[10px] h-[120px] flex flex-col justify-between bg-[#0e0e14]/40 shadow-sm">
+              <div className="flex items-center justify-between text-[8px] text-zinc-500 border-b border-white/[0.03] pb-1.5 mb-1.5 uppercase font-bold">
                 <div className="flex items-center gap-1.5">
-                  <Terminal className="h-3.5 w-3.5 text-purple-400" />
+                  <Terminal className="h-3.5 w-3.5 text-indigo-400" />
                   <span>Gateway Submission logs</span>
                 </div>
                 <span>REST client</span>
               </div>
 
-              <div className="flex-1 overflow-y-auto space-y-1 text-[10px] text-zinc-400 terminal-scroll">
+              <div className="flex-1 overflow-y-auto space-y-1 text-[9px] text-zinc-400 terminal-scroll">
                 {logs.map((log, idx) => (
                   <div key={idx} className="leading-relaxed">
                     {log.startsWith('[ERROR]') || log.startsWith('[CRITICAL]') ? (
@@ -386,24 +396,24 @@ const Contact = () => {
                     ) : log.includes('Warning') || log.includes('FALLBACK') ? (
                       <span className="text-amber-400 font-semibold">{log}</span>
                     ) : (
-                      <span className="text-zinc-500">{log}</span>
+                      <span className="text-zinc-550">{log}</span>
                     )}
                   </div>
                 ))}
                 {submitting && (
                   <div className="flex items-center gap-1 text-zinc-500 italic">
-                    <span className="w-1 h-3.5 bg-purple-500 animate-pulse"></span>
+                    <span className="w-1 h-3.5 bg-indigo-500 animate-pulse"></span>
                     <span>Streaming network buffers...</span>
                   </div>
                 )}
                 {logs.length === 0 && (
-                  <span className="text-zinc-600 italic">// Console idle. Fill form and submit to monitor webhook logs...</span>
+                  <span className="text-zinc-650 italic">// Console idle. Fill form and submit to monitor network gate logs...</span>
                 )}
               </div>
 
               {submitted && (
-                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-[10px] mt-1 pt-1 border-t border-zinc-900/50">
-                  <CheckCircle className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-[9px] mt-1 pt-1 border-t border-white/[0.04]">
+                  <CheckCircle className="h-3.5 w-3.5 shrink-0" />
                   <span>DISPATCH COMPLETE. Shrijal has been notified!</span>
                 </div>
               )}

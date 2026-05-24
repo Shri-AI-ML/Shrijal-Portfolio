@@ -1,9 +1,124 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Calendar, MapPin, ChevronDown, ChevronUp, Link as LinkIcon, Users, FileText } from 'lucide-react';
+import { Briefcase, Calendar, MapPin, ChevronDown, ChevronUp, Cpu, Server, Check } from 'lucide-react';
+import { use3DTilt } from '../hooks/use3DTilt';
+
+const ExperienceCard = ({ exp, idx, isExpanded, toggleExpand }) => {
+  const { tiltStyle, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(3, 1.008);
+
+  const statusMap = {
+    "Pinnacle Labs": { text: "RUNNING", color: "text-emerald-400 bg-emerald-500/5 border-emerald-500/10" },
+    "Data Science Club, VIT Bhopal": { text: "ACTIVE", color: "text-indigo-400 bg-indigo-500/5 border-indigo-500/10" },
+    "AI CLUB - VIT BHOPAL University": { text: "COMPLETE", color: "text-zinc-400 bg-zinc-500/5 border-zinc-500/10" },
+    "Kshitiksha Foundation": { text: "COMPLETE", color: "text-zinc-400 bg-zinc-500/5 border-zinc-500/10" }
+  };
+
+  const status = statusMap[exp.company] || { text: "COMPLETE", color: "text-zinc-400 bg-zinc-500/5 border-zinc-550/10" };
+
+  return (
+    <div className="relative pl-6 md:pl-8 group">
+      {/* Visual Pipeline Node Dot */}
+      <div 
+        className={`absolute -left-[6.5px] top-4 w-3.5 h-3.5 rounded-full border-2 transition-all duration-300 z-10 ${
+          isExpanded 
+            ? 'bg-[#07070a] border-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.8)] scale-110' 
+            : 'bg-[#07070a] border-zinc-800 group-hover:border-zinc-500'
+        }`}
+      />
+
+      {/* Date element for Desktop (left of timeline line) */}
+      <div className="hidden md:block absolute right-full mr-8 top-3.5 text-right w-28">
+        <span className="text-[10px] font-mono text-zinc-500 block">{exp.duration.split('–')[0]}</span>
+        <span className="text-[9px] font-mono text-indigo-400/70 block uppercase tracking-widest">{exp.type}</span>
+      </div>
+
+      {/* Interactive 3D Card */}
+      <div
+        style={tiltStyle}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="glass-panel border border-white/[0.04] rounded-xl overflow-hidden hover:border-white/[0.08] transition-all bg-[#0e0e14]/40 relative shadow-md"
+      >
+        <div style={{ ...glareStyle, position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }} />
+
+        {/* Card Header clickable bar */}
+        <div 
+          onClick={() => toggleExpand(idx)}
+          className="p-5 flex items-center justify-between cursor-pointer select-none z-10 relative"
+        >
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">{exp.role}</h3>
+              <span className="text-xs text-indigo-400 font-mono font-semibold">@ {exp.company}</span>
+              <span className={`text-[8px] font-mono font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${status.color}`}>
+                {status.text}
+              </span>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3 text-[10px] text-zinc-500 font-mono mt-1.5">
+              <span className="md:hidden flex items-center gap-1">
+                <Calendar className="h-3 w-3" /> {exp.duration}
+              </span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" /> {exp.location}
+              </span>
+            </div>
+          </div>
+
+          <button className="text-zinc-500 hover:text-white transition-colors cursor-pointer">
+            {isExpanded ? <ChevronUp className="h-4.5 w-4.5" /> : <ChevronDown className="h-4.5 w-4.5" />}
+          </button>
+        </div>
+
+        {/* Expandable Details Panel */}
+        <AnimatePresence initial={false}>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0 }}
+              animate={{ height: 'auto' }}
+              exit={{ height: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="overflow-hidden border-t border-white/[0.04] bg-white/[0.01] z-10 relative"
+            >
+              <div className="p-5 space-y-4 text-xs sm:text-sm leading-relaxed text-zinc-400 font-normal">
+                
+                {/* Deliverable list */}
+                <ul className="space-y-2.5 list-none pl-0">
+                  {exp.details.map((detail, dIdx) => (
+                    <li key={dIdx} className="flex gap-2.5 items-start">
+                      <span className="text-indigo-400 font-mono shrink-0 select-none text-[10px] mt-0.5">▷</span>
+                      <span className="text-[11px] sm:text-xs leading-normal">{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Skill Tags */}
+                <div className="pt-3.5 border-t border-white/[0.04]">
+                  <span className="text-[9px] font-mono text-zinc-550 uppercase tracking-widest block mb-2">Technologies / Skills Utilized:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {exp.skills.map((skill, sIdx) => (
+                      <span 
+                        key={sIdx}
+                        className="text-[10px] font-mono bg-[#171722] border border-white/[0.04] px-2 py-0.5 rounded text-zinc-350 hover:border-indigo-500/20 hover:text-indigo-400 transition-colors"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
+    </div>
+  );
+};
 
 const Experience = () => {
-  const [expandedIndex, setExpandedIndex] = useState(0); // First item expanded by default
+  const [expandedIndex, setExpandedIndex] = useState(0);
 
   const experiences = [
     {
@@ -63,120 +178,36 @@ const Experience = () => {
   };
 
   return (
-    <section id="experience" className="py-16 md:py-24 border-t border-zinc-900 relative">
+    <section id="experience" className="py-20 border-t border-white/[0.04] relative">
+      {/* Grid drift background overlay */}
+      <div className="absolute inset-0 bg-dot-grid opacity-15 pointer-events-none" />
+      
       <div className="max-w-4xl mx-auto">
         
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-950 px-3 py-1 rounded-full text-xs text-zinc-400 font-mono mb-4">
-            <Briefcase className="h-3.5 w-3.5 text-purple-400" />
+          <div className="inline-flex items-center gap-2 border border-white/[0.04] bg-[#0e0e14] px-3 py-1 rounded-full text-[10px] text-zinc-400 font-mono mb-4">
+            <Briefcase className="h-3.5 w-3.5 text-indigo-400" />
             <span>/system/log/experience</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
             CAREER TIMELINE
           </h2>
-          <p className="text-sm text-zinc-500 font-mono mt-2">
+          <p className="text-xs sm:text-sm text-zinc-550 font-mono mt-2">
             Click on any milestone to inspect technical details and deliverables.
           </p>
         </div>
 
-        {/* Timeline container */}
-        <div className="relative border-l border-zinc-800 ml-4 md:ml-32 space-y-12">
-          {experiences.map((exp, idx) => {
-            const isExpanded = expandedIndex === idx;
-            return (
-              <div key={idx} className="relative pl-6 md:pl-8 group">
-                
-                {/* Timeline node */}
-                <div 
-                  className={`absolute -left-[6.5px] top-1.5 w-3 h-3 rounded-full border transition-all duration-300 ${
-                    isExpanded 
-                      ? 'bg-purple-500 border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.8)] scale-125' 
-                      : 'bg-zinc-950 border-zinc-800 group-hover:border-zinc-500'
-                  }`}
-                />
-
-                {/* Date element for Desktop (floated left of line) */}
-                <div className="hidden md:block absolute right-full mr-8 top-1 text-right w-24">
-                  <span className="text-xs font-mono text-zinc-500 block">{exp.duration.split('–')[0]}</span>
-                  <span className="text-[10px] font-mono text-purple-400/70 block uppercase tracking-wider">{exp.type}</span>
-                </div>
-
-                {/* Experience Card */}
-                <div className="glass-panel border border-zinc-900/80 rounded-xl overflow-hidden hover:border-zinc-800 transition-all">
-                  
-                  {/* Card Header clickable bar */}
-                  <div 
-                    onClick={() => toggleExpand(idx)}
-                    className="p-5 flex items-center justify-between cursor-pointer select-none"
-                  >
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">{exp.role}</h3>
-                        <span className="text-xs text-purple-400 font-mono">@ {exp.company}</span>
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500 font-mono mt-1">
-                        <span className="md:hidden flex items-center gap-1">
-                          <Calendar className="h-3 w-3" /> {exp.duration}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" /> {exp.location}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button className="text-zinc-500 hover:text-white transition-colors">
-                      {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                    </button>
-                  </div>
-
-                  {/* Expandable Body */}
-                  <AnimatePresence initial={false}>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: 'auto' }}
-                        exit={{ height: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className="overflow-hidden border-t border-zinc-900/80 bg-zinc-950/20"
-                      >
-                        <div className="p-5 space-y-4 text-sm leading-relaxed text-zinc-400">
-                          
-                          {/* Deliverable list */}
-                          <ul className="space-y-2.5 list-none pl-0">
-                            {exp.details.map((detail, dIdx) => (
-                              <li key={dIdx} className="flex gap-2.5 items-start">
-                                <span className="text-purple-500 font-mono shrink-0 select-none">▷</span>
-                                <span>{detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-
-                          {/* Skill Tags */}
-                          <div className="pt-3 border-t border-zinc-900/60">
-                            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">Technologies / Skills Utilized:</span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {exp.skills.map((skill, sIdx) => (
-                                <span 
-                                  key={sIdx}
-                                  className="text-xs font-mono bg-zinc-900/80 border border-zinc-800/80 px-2 py-0.5 rounded text-zinc-300 hover:border-purple-500/20 hover:text-purple-400 transition-colors"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                </div>
-
-              </div>
-            );
-          })}
+        {/* Timeline Container with pipeline connection lines */}
+        <div className="relative border-l border-zinc-800 ml-4 md:ml-32 space-y-10">
+          {experiences.map((exp, idx) => (
+            <ExperienceCard
+              key={idx}
+              exp={exp}
+              idx={idx}
+              isExpanded={expandedIndex === idx}
+              toggleExpand={toggleExpand}
+            />
+          ))}
         </div>
 
       </div>

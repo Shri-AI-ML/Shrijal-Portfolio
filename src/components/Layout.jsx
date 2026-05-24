@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Mail, FileText, Check, Copy, Circle } from 'lucide-react';
+import { Menu, X, Mail, FileText, Check, Copy, Circle, Cpu } from 'lucide-react';
 
 const Github = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -16,7 +16,6 @@ const Linkedin = ({ className }) => (
     <circle cx="4" cy="4" r="2" />
   </svg>
 );
-
 
 const Layout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,13 +42,20 @@ const Layout = ({ children }) => {
     setMobileMenuOpen(false);
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const headerOffset = 80;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 200;
+      const scrollPosition = window.scrollY + 220;
       for (const item of navItems) {
         const el = document.getElementById(item.id);
         if (el) {
@@ -67,32 +73,37 @@ const Layout = ({ children }) => {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-[#030303] text-zinc-100 selection:bg-purple-500/30 selection:text-purple-200">
-      {/* Sticky Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-900 bg-[#030303]/60 backdrop-blur-md">
+    <div className="relative min-h-screen bg-[var(--bg-primary)] text-zinc-100 selection:bg-indigo-500/20 selection:text-indigo-200">
+      {/* Sticky Header with Vercel-like Glassmorphism */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.04] bg-[#07070a]/70 backdrop-blur-md shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span 
               onClick={() => scrollToSection('hero')} 
-              className="text-lg font-mono font-bold tracking-tight cursor-pointer flex items-center gap-2"
+              className="text-base font-mono font-bold tracking-wider cursor-pointer flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
-              <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
-              SHRIJAL.AI
+              <Cpu className="h-4 w-4 text-indigo-400" />
+              <span>SHRIJAL.AI</span>
             </span>
-            <div className="hidden md:flex items-center gap-2 border border-zinc-800/80 bg-zinc-950/60 rounded-full px-3 py-1 text-xs text-zinc-400">
-              <Circle className="h-2 w-2 fill-emerald-500 text-emerald-500 animate-ping" />
-              <span>Available for Internships 2026</span>
+            <div className="hidden md:flex items-center gap-2 border border-emerald-500/10 bg-emerald-500/5 rounded-full px-2.5 py-0.5 text-[10px] text-emerald-400 font-mono">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span>Active Node: Intern 2026</span>
             </div>
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-1.5 bg-white/[0.02] border border-white/[0.04] p-1 rounded-full">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className={`text-sm font-mono transition-colors hover:text-white ${
-                  activeSection === item.id ? 'text-purple-400' : 'text-zinc-400'
+                className={`text-xs font-mono px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+                  activeSection === item.id 
+                    ? 'bg-white/[0.05] text-white font-semibold shadow-inner' 
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.01]'
                 }`}
               >
                 /{item.label.toLowerCase()}
@@ -100,52 +111,52 @@ const Layout = ({ children }) => {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <a
               href="https://github.com/Shri-AI-ML"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-zinc-400 hover:text-white transition-colors"
+              className="p-1.5 text-zinc-400 hover:text-white transition-colors bg-white/[0.02] border border-white/[0.04] rounded-lg"
               aria-label="Shrijal Goswami's GitHub Profile"
             >
-              <Github className="h-5 w-5" />
+              <Github className="h-4 w-4" />
             </a>
             <a
               href="https://www.linkedin.com/in/shrijal-goswami"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-zinc-400 hover:text-white transition-colors"
+              className="p-1.5 text-zinc-400 hover:text-white transition-colors bg-white/[0.02] border border-white/[0.04] rounded-lg"
               aria-label="Shrijal Goswami's LinkedIn Profile"
             >
-              <Linkedin className="h-5 w-5" />
+              <Linkedin className="h-4 w-4" />
             </a>
             <a
               href="/Shrijal_Goswami_Resume.pdf"
               download="Shrijal_Goswami_Resume.pdf"
-              className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-purple-500/30 hover:bg-purple-950/10 text-xs font-mono px-4 py-2 rounded-md transition-all"
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[11px] px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
               aria-label="Download Shrijal Goswami's Resume PDF"
             >
-              <FileText className="h-4 w-4 text-purple-400" />
+              <FileText className="h-3.5 w-3.5" />
               <span>Resume.pdf</span>
             </a>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-3">
+          <div className="flex md:hidden items-center gap-2">
             <a
               href="/Shrijal_Goswami_Resume.pdf"
               download="Shrijal_Goswami_Resume.pdf"
-              className="p-2 bg-zinc-950 border border-zinc-800 rounded-md text-zinc-400"
+              className="p-2 bg-white/[0.02] border border-white/[0.04] rounded-lg text-zinc-400"
               aria-label="Download Shrijal Goswami's Resume PDF"
             >
               <FileText className="h-4 w-4" />
             </a>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-zinc-400 hover:text-white"
+              className="p-2 text-zinc-400 hover:text-white bg-white/[0.02] border border-white/[0.04] rounded-lg"
               aria-label="Toggle Navigation Menu"
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
@@ -155,39 +166,42 @@ const Layout = ({ children }) => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-x-0 top-16 z-40 bg-[#030303]/95 border-b border-zinc-900 backdrop-blur-lg md:hidden"
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-x-0 top-16 z-40 bg-[#07070a]/95 border-b border-white/[0.04] backdrop-blur-lg md:hidden"
           >
-            <div className="px-4 pt-4 pb-6 space-y-3">
+            <div className="px-4 pt-4 pb-6 space-y-2">
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`block w-full text-left font-mono py-2 text-base transition-colors ${
-                    activeSection === item.id ? 'text-purple-400 border-l-2 border-purple-500 pl-2' : 'text-zinc-400'
+                  className={`block w-full text-left font-mono py-2.5 px-3 rounded-lg text-sm transition-all ${
+                    activeSection === item.id 
+                      ? 'text-indigo-400 bg-indigo-500/5 font-semibold' 
+                      : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   /{item.label.toLowerCase()}
                 </button>
               ))}
-              <div className="pt-4 border-t border-zinc-900 flex justify-around">
+              <div className="pt-4 border-t border-white/[0.04] flex justify-around">
                 <a
                   href="https://github.com/Shri-AI-ML"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white"
+                  className="flex items-center gap-2 text-xs text-zinc-400 hover:text-white"
                 >
-                  <Github className="h-5 w-5" /> GitHub
+                  <Github className="h-4 w-4" /> GitHub
                 </a>
                 <a
                   href="https://www.linkedin.com/in/shrijal-goswami"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white"
+                  className="flex items-center gap-2 text-xs text-zinc-400 hover:text-white"
                 >
-                  <Linkedin className="h-5 w-5" /> LinkedIn
+                  <Linkedin className="h-4 w-4" /> LinkedIn
                 </a>
               </div>
             </div>
@@ -195,44 +209,44 @@ const Layout = ({ children }) => {
         )}
       </AnimatePresence>
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 relative z-10">
+      {/* Main Content Area with responsive paddings and high contrast layout */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20 relative z-10">
         {children}
       </main>
 
-      {/* Sleek Footer */}
-      <footer className="border-t border-zinc-900 bg-zinc-950/40 relative z-10 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+      {/* Sleek Cinematic Footer */}
+      <footer className="border-t border-white/[0.04] bg-[#09090e]/60 backdrop-blur-md relative z-10 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-center md:text-left">
-            <span className="font-mono text-zinc-300 font-bold">SHRIJAL GOSWAMI</span>
-            <p className="text-xs text-zinc-500 mt-1 font-mono">B.Tech AI/ML @ VIT Bhopal (2024 - 2028)</p>
+            <span className="font-mono text-zinc-300 font-bold tracking-wide">SHRIJAL GOSWAMI</span>
+            <p className="text-[10px] text-zinc-500 mt-1 font-mono">B.Tech AI/ML @ VIT Bhopal (2024 - 2028)</p>
           </div>
 
           <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-2 bg-zinc-900/60 border border-zinc-800 rounded-full py-1 px-4 text-xs font-mono">
-              <span className="text-zinc-500">EMAIL:</span>
-              <span className="text-zinc-300">goswamivansh999@gmail.com</span>
+            <div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.05] rounded-full py-1 px-4 text-xs font-mono">
+              <span className="text-zinc-500 text-[10px]">HOST GATEWAY:</span>
+              <span className="text-zinc-300 font-semibold">goswamivansh999@gmail.com</span>
               <button 
                 onClick={handleCopyEmail} 
-                className="ml-2 p-1 text-zinc-500 hover:text-white transition-colors"
+                className="ml-2 p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 title="Copy Email"
                 aria-label="Copy Shrijal Goswami's Email Address to Clipboard"
               >
-                {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
               </button>
             </div>
-            <p className="text-[10px] text-zinc-600 font-mono">Designed for Recruitment & Open Source Collaboration</p>
+            <p className="text-[9px] text-zinc-600 font-mono tracking-wider">SECURE SHIELD WEB INTERFACES ACTIVE</p>
           </div>
 
-          <div className="flex flex-col items-center md:items-end gap-2 text-xs font-mono">
-            <div className="flex items-center gap-2 text-emerald-500">
-              <span className="relative flex h-2 w-2">
+          <div className="flex flex-col items-center md:items-end gap-1.5 text-xs font-mono">
+            <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded">
+              <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
-              <span>SYSTEM: OPERATIONAL</span>
+              <span className="text-[10px]">GATEWAY: OPERATIONAL</span>
             </div>
-            <p className="text-[10px] text-zinc-500">© 2026 Shrijal Goswami. All rights reserved.</p>
+            <p className="text-[9px] text-zinc-500">© 2026 Shrijal Goswami. All rights reserved.</p>
           </div>
         </div>
       </footer>
