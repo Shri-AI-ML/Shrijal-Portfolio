@@ -3,6 +3,150 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Terminal, Database, Cpu, Search, Sparkles, RefreshCw, Send, ArrowRight, GitCommit } from 'lucide-react';
 import { use3DTilt } from '../hooks/use3DTilt';
 
+// Modular RAG Path with double layer for high-contrast cinematic glow
+const RAGPath = ({ d, active, color = '#818cf8', glowColor = 'rgba(99,102,241,0.22)', isDashed = false }) => {
+  return (
+    <>
+      {/* Background glow path (blurred) */}
+      {active && (
+        <path
+          d={d}
+          fill="none"
+          stroke={glowColor}
+          strokeWidth={5.5}
+          className="blur-[2px] transition-all duration-500"
+          strokeDasharray={isDashed ? '4,4' : '0'}
+        />
+      )}
+      {/* Core solid path */}
+      <path
+        d={d}
+        fill="none"
+        stroke={active ? color : 'rgba(255, 255, 255, 0.08)'}
+        strokeWidth={active ? 2 : 1.2}
+        className="transition-all duration-500"
+        strokeDasharray={isDashed ? '4,4' : '0'}
+      />
+    </>
+  );
+};
+
+// Animated energy pulse line that travels along connection paths
+const PulsePath = ({ d, active, color = '#6366f1' }) => {
+  if (!active) return null;
+  return (
+    <>
+      {/* Glowing pulse path */}
+      <motion.path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        initial={{ strokeDasharray: "10, 45", strokeDashoffset: 55 }}
+        animate={{ strokeDashoffset: 0 }}
+        transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+      />
+      {/* Fainter wider glow for pulse */}
+      <motion.path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth={6.5}
+        strokeLinecap="round"
+        className="blur-[2px]"
+        initial={{ strokeDasharray: "10, 45", strokeDashoffset: 55 }}
+        animate={{ strokeDashoffset: 0 }}
+        transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+        opacity={0.45}
+      />
+    </>
+  );
+};
+
+// High-fidelity RAG Node component with custom LED, edge lighting, and breathing pulses
+const RAGNode = ({ label, sublabel, activeSteps, ragStep, widthClass, isFusion = false }) => {
+  const isActive = activeSteps.includes(ragStep);
+
+  // System-oriented theme configurations (cinematic execution style)
+  let activeBorder = 'border-indigo-500/50';
+  let activeBg = 'bg-[#12121e]/90';
+  let activeGlow = 'shadow-[0_0_15px_rgba(99,102,241,0.12)]';
+  let activeText = 'text-indigo-400';
+  let activeLed = 'bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.95)]';
+  
+  if (label === 'Context') {
+    activeBorder = 'border-emerald-500/50';
+    activeBg = 'bg-[#0f1f18]/90';
+    activeGlow = 'shadow-[0_0_15px_rgba(52,211,153,0.12)]';
+    activeText = 'text-emerald-400';
+    activeLed = 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.95)]';
+  } else if (label === 'Groq LLM') {
+    activeBorder = 'border-purple-500/50';
+    activeBg = 'bg-[#18121f]/90';
+    activeGlow = 'shadow-[0_0_15px_rgba(168,85,247,0.12)]';
+    activeText = 'text-purple-400';
+    activeLed = 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.95)]';
+  } else if (label === 'ChromaDB') {
+    activeBorder = 'border-blue-500/50';
+    activeBg = 'bg-[#121824]/90';
+    activeGlow = 'shadow-[0_0_15px_rgba(59,130,246,0.12)]';
+    activeText = 'text-blue-400';
+    activeLed = 'bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.95)]';
+  } else if (label === 'BM25') {
+    activeBorder = 'border-purple-500/50';
+    activeBg = 'bg-[#18121f]/90';
+    activeGlow = 'shadow-[0_0_15px_rgba(168,85,247,0.12)]';
+    activeText = 'text-purple-400';
+    activeLed = 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.95)]';
+  }
+
+  // Customize Fusion node characteristics to make it the central focal point
+  if (isFusion) {
+    activeBorder = 'border-indigo-400 ring-1 ring-indigo-500/20';
+    activeBg = 'bg-[#141426]/95';
+    activeGlow = 'shadow-[0_0_25px_rgba(99,102,241,0.22)]';
+    activeText = 'text-indigo-300';
+    activeLed = 'bg-indigo-300 shadow-[0_0_12px_rgba(99,102,241,1)] animate-ping';
+  }
+
+  const pulseScale = isFusion ? [1, 1.05, 1] : [1, 1.02, 1];
+  const pulseDuration = isFusion ? 1.6 : 2.4;
+
+  return (
+    <motion.div
+      animate={isActive ? { scale: pulseScale } : { scale: 1 }}
+      transition={{ repeat: isActive ? Infinity : 0, repeatType: "reverse", duration: pulseDuration, ease: "easeInOut" }}
+      className={`relative p-2 rounded-lg border transition-all duration-500 backdrop-blur-md select-none font-mono ${widthClass} ${
+        isActive
+          ? `${activeBg} ${activeBorder} ${activeGlow} text-zinc-150 z-20`
+          : 'bg-[#0a0a0f]/80 border-white/[0.06] text-zinc-400 z-10'
+      }`}
+      style={{
+        boxShadow: isActive 
+          ? 'inset 0 1px 1px rgba(255, 255, 255, 0.05)' 
+          : 'inset 0 1px 1px rgba(255, 255, 255, 0.01)'
+      }}
+    >
+      {/* Edge highlight lighting (subtle top gradient highlight) */}
+      <div 
+        className={`absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent transition-opacity duration-500 ${
+          isActive ? 'opacity-100' : 'opacity-0'
+        }`} 
+      />
+
+      <div className="flex flex-col items-center justify-center text-center">
+        {/* LED Status indicator */}
+        <div className="flex items-center gap-1.5 mb-0.5 justify-center">
+          <span className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${isActive ? activeLed : 'bg-zinc-800'}`} />
+          <span className={`block font-bold tracking-wider text-[8px] transition-colors duration-500 ${isActive ? 'text-zinc-100 font-extrabold' : 'text-zinc-500'}`}>{label}</span>
+        </div>
+        <span className={`text-[6.5px] block opacity-75 uppercase tracking-wide truncate max-w-full transition-colors duration-500 ${isActive ? activeText : 'text-zinc-600'}`}>{sublabel}</span>
+      </div>
+    </motion.div>
+  );
+};
+
 const RAGTerminal = () => {
   const [inputVal, setInputVal] = useState('');
   const [logs, setLogs] = useState([]);
@@ -225,8 +369,8 @@ const RAGTerminal = () => {
         </div>
 
         {/* Live Visual RAG Pipeline Graph */}
-        <div className="glass-panel border border-white/[0.04] rounded-xl p-4 mb-6 shadow-lg bg-[#0e0e14]/60">
-          <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-4">
+        <div className="glass-panel border border-white/[0.04] rounded-xl p-4 mb-6 shadow-lg bg-[#0e0e14]/60 overflow-hidden relative">
+          <span className="text-[9px] font-mono text-zinc-550 uppercase tracking-widest block mb-4">
             LIVE PIPELINE GRAPH MONITOR // PIPELINE_FLOW
           </span>
           <div className="relative overflow-x-auto no-scrollbar py-2">
@@ -234,90 +378,128 @@ const RAGTerminal = () => {
               
               {/* Connector Path Lines */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                {/* Query to Router */}
-                <path d="M 68 40 H 122" stroke={ragStep !== 'idle' ? '#818cf8' : '#1f1f2e'} strokeWidth={ragStep !== 'idle' ? 1.5 : 1} strokeDasharray={ragStep === 'parsing' ? '4,4' : '0'} />
-                
-                {/* Router to Dense */}
-                <path d="M 172 40 Q 212 18, 252 18" stroke={['retrieving', 'fusing', 'generating', 'done'].includes(ragStep) ? '#818cf8' : '#1f1f2e'} strokeWidth={['retrieving', 'fusing', 'generating', 'done'].includes(ragStep) ? 1.5 : 1} />
-                
-                {/* Router to Sparse */}
-                <path d="M 172 40 Q 212 62, 252 62" stroke={['retrieving', 'fusing', 'generating', 'done'].includes(ragStep) ? '#c084fc' : '#1f1f2e'} strokeWidth={['retrieving', 'fusing', 'generating', 'done'].includes(ragStep) ? 1.5 : 1} />
-                
-                {/* Dense to Fusion */}
-                <path d="M 332 18 Q 372 40, 412 40" stroke={['fusing', 'generating', 'done'].includes(ragStep) ? '#818cf8' : '#1f1f2e'} strokeWidth={['fusing', 'generating', 'done'].includes(ragStep) ? 1.5 : 1} />
-                
-                {/* Sparse to Fusion */}
-                <path d="M 332 62 Q 372 40, 412 40" stroke={['fusing', 'generating', 'done'].includes(ragStep) ? '#c084fc' : '#1f1f2e'} strokeWidth={['fusing', 'generating', 'done'].includes(ragStep) ? 1.5 : 1} />
-                
-                {/* Fusion to Context */}
-                <path d="M 462 40 H 512" stroke={['generating', 'done'].includes(ragStep) ? '#34d399' : '#1f1f2e'} strokeWidth={['generating', 'done'].includes(ragStep) ? 1.5 : 1} />
-                
-                {/* Context to LLM */}
-                <path d="M 562 40 H 602" stroke={['generating', 'done'].includes(ragStep) ? '#34d399' : '#1f1f2e'} strokeWidth={['generating', 'done'].includes(ragStep) ? 1.5 : 1} />
+                <defs>
+                  <radialGradient id="queryGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.16" />
+                    <stop offset="100%" stopColor="#818cf8" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="retrievalGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#c084fc" stopOpacity="0.14" />
+                    <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="fusionGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.22" />
+                    <stop offset="100%" stopColor="#818cf8" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="llmGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.16" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
 
-                {/* Animated Dash Array flow to show active processing */}
-                {ragStep === 'parsing' && (
-                  <motion.path d="M 68 40 H 122" fill="none" stroke="#6366f1" strokeWidth="2" initial={{ strokeDasharray: "5,15", strokeDashoffset: 20 }} animate={{ strokeDashoffset: 0 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
-                )}
-                {ragStep === 'retrieving' && (
-                  <>
-                    <motion.path d="M 172 40 Q 212 18, 252 18" fill="none" stroke="#6366f1" strokeWidth="2" initial={{ strokeDasharray: "5,15", strokeDashoffset: 20 }} animate={{ strokeDashoffset: 0 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
-                    <motion.path d="M 172 40 Q 212 62, 252 62" fill="none" stroke="#a855f7" strokeWidth="2" initial={{ strokeDasharray: "5,15", strokeDashoffset: 20 }} animate={{ strokeDashoffset: 0 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
-                  </>
-                )}
-                {ragStep === 'generating' && (
-                  <>
-                    <motion.path d="M 462 40 H 512" fill="none" stroke="#10b981" strokeWidth="2" initial={{ strokeDasharray: "5,15", strokeDashoffset: 20 }} animate={{ strokeDashoffset: 0 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
-                    <motion.path d="M 562 40 H 602" fill="none" stroke="#10b981" strokeWidth="2" initial={{ strokeDasharray: "5,15", strokeDashoffset: 20 }} animate={{ strokeDashoffset: 0 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
-                  </>
-                )}
+                {/* Ambient background gradients behind active graph regions */}
+                <g className="transition-opacity duration-700">
+                  {['parsing', 'retrieving', 'fusing', 'generating', 'done'].includes(ragStep) && (
+                    <circle cx="120" cy="40" r="90" fill="url(#queryGlow)" />
+                  )}
+                  {['retrieving', 'fusing', 'generating', 'done'].includes(ragStep) && (
+                    <circle cx="290" cy="40" r="110" fill="url(#retrievalGlow)" />
+                  )}
+                  {['fusing', 'generating', 'done'].includes(ragStep) && (
+                    <circle cx="437" cy="40" r="100" fill="url(#fusionGlow)" />
+                  )}
+                  {['generating', 'done'].includes(ragStep) && (
+                    <circle cx="630" cy="40" r="100" fill="url(#llmGlow)" />
+                  )}
+                </g>
+
+                {/* Inactive & Active paths with double layer glows */}
+                <RAGPath d="M 68 40 H 122" active={ragStep !== 'idle'} color="#818cf8" glowColor="rgba(99,102,241,0.25)" isDashed={ragStep === 'parsing'} />
+                <RAGPath d="M 172 40 Q 212 18, 252 18" active={['retrieving', 'fusing', 'generating', 'done'].includes(ragStep)} color="#818cf8" glowColor="rgba(99,102,241,0.25)" />
+                <RAGPath d="M 172 40 Q 212 62, 252 62" active={['retrieving', 'fusing', 'generating', 'done'].includes(ragStep)} color="#c084fc" glowColor="rgba(168,85,247,0.25)" />
+                <RAGPath d="M 332 18 Q 372 40, 412 40" active={['fusing', 'generating', 'done'].includes(ragStep)} color="#818cf8" glowColor="rgba(99,102,241,0.25)" />
+                <RAGPath d="M 332 62 Q 372 40, 412 40" active={['fusing', 'generating', 'done'].includes(ragStep)} color="#c084fc" glowColor="rgba(168,85,247,0.25)" />
+                <RAGPath d="M 462 40 H 512" active={['generating', 'done'].includes(ragStep)} color="#10b981" glowColor="rgba(16,185,129,0.25)" />
+                <RAGPath d="M 562 40 H 602" active={['generating', 'done'].includes(ragStep)} color="#10b981" glowColor="rgba(16,185,129,0.25)" />
+
+                {/* Animated flowing energy pulses */}
+                <PulsePath d="M 68 40 H 122" active={ragStep === 'parsing'} color="#818cf8" />
+                <PulsePath d="M 172 40 Q 212 18, 252 18" active={ragStep === 'retrieving'} color="#818cf8" />
+                <PulsePath d="M 172 40 Q 212 62, 252 62" active={ragStep === 'retrieving'} color="#c084fc" />
+                <PulsePath d="M 332 18 Q 372 40, 412 40" active={ragStep === 'fusing'} color="#818cf8" />
+                <PulsePath d="M 332 62 Q 372 40, 412 40" active={ragStep === 'fusing'} color="#c084fc" />
+                <PulsePath d="M 462 40 H 512" active={ragStep === 'generating'} color="#10b981" />
+                <PulsePath d="M 562 40 H 602" active={ragStep === 'generating'} color="#10b981" />
               </svg>
 
               {/* Node 1: Query */}
-              <div className={`w-16 text-center z-10 p-1.5 rounded border transition-all ${ragStep !== 'idle' ? 'bg-indigo-950/20 border-indigo-500 text-indigo-300' : 'bg-[#0e0e14] border-white/[0.04] text-zinc-500'}`}>
-                <span className="block font-bold">Query</span>
-                <span className="text-[8px] opacity-75">/stdin</span>
-              </div>
+              <RAGNode 
+                label="Query" 
+                sublabel="/stdin" 
+                activeSteps={['parsing', 'retrieving', 'fusing', 'generating', 'done']} 
+                ragStep={ragStep} 
+                widthClass="w-[68px] min-w-[68px]" 
+              />
 
               {/* Node 2: Router */}
-              <div className={`w-12 text-center z-10 p-1 rounded border transition-all ${['parsing', 'retrieving', 'fusing', 'generating', 'done'].includes(ragStep) ? 'bg-indigo-950/20 border-indigo-500 text-indigo-300' : 'bg-[#0e0e14] border-white/[0.04] text-zinc-500'}`}>
-                <span className="block font-bold">Router</span>
-                <span className="text-[7px] opacity-75">Weights</span>
-              </div>
+              <RAGNode 
+                label="Router" 
+                sublabel="Weights" 
+                activeSteps={['parsing', 'retrieving', 'fusing', 'generating', 'done']} 
+                ragStep={ragStep} 
+                widthClass="w-[52px] min-w-[52px]" 
+              />
 
               {/* Parallel Pathways: Dense / Sparse */}
-              <div className="flex flex-col gap-3.5 z-10">
-                <div className={`w-20 text-center p-1 rounded border transition-all ${['retrieving', 'fusing', 'generating', 'done'].includes(ragStep) ? 'bg-indigo-950/20 border-indigo-400 text-indigo-300 shadow-[0_0_8px_rgba(99,102,241,0.2)]' : 'bg-[#0e0e14] border-white/[0.04] text-zinc-500'}`}>
-                  <span className="block font-bold">ChromaDB</span>
-                  <span className="text-[7px] opacity-75">Dense cosine</span>
-                </div>
-                <div className={`w-20 text-center p-1 rounded border transition-all ${['retrieving', 'fusing', 'generating', 'done'].includes(ragStep) ? 'bg-purple-950/20 border-purple-400 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.2)]' : 'bg-[#0e0e14] border-white/[0.04] text-zinc-500'}`}>
-                  <span className="block font-bold">BM25</span>
-                  <span className="text-[7px] opacity-75">Sparse lex</span>
-                </div>
+              <div className="flex flex-col gap-3.5 z-10 w-[80px] min-w-[80px]">
+                <RAGNode 
+                  label="ChromaDB" 
+                  sublabel="Dense Vector" 
+                  activeSteps={['retrieving', 'fusing', 'generating', 'done']} 
+                  ragStep={ragStep} 
+                  widthClass="w-[80px] min-w-[80px]" 
+                />
+                <RAGNode 
+                  label="BM25" 
+                  sublabel="Sparse Lex" 
+                  activeSteps={['retrieving', 'fusing', 'generating', 'done']} 
+                  ragStep={ragStep} 
+                  widthClass="w-[80px] min-w-[80px]" 
+                />
               </div>
 
               {/* Node 4: Linear Fusion Combiner */}
-              <div className={`w-12 text-center z-10 p-1 rounded border transition-all ${['fusing', 'generating', 'done'].includes(ragStep) ? 'bg-indigo-950/20 border-indigo-500 text-indigo-300' : 'bg-[#0e0e14] border-white/[0.04] text-zinc-500'}`}>
-                <span className="block font-bold">Fusion</span>
-                <span className="text-[7px] opacity-75">α = 0.65</span>
-              </div>
+              <RAGNode 
+                label="Fusion" 
+                sublabel="α = 0.65" 
+                activeSteps={['fusing', 'generating', 'done']} 
+                ragStep={ragStep} 
+                widthClass="w-[58px] min-w-[58px]" 
+                isFusion={true}
+              />
 
               {/* Node 5: Grounded Context */}
-              <div className={`w-16 text-center z-10 p-1 rounded border transition-all ${['generating', 'done'].includes(ragStep) ? 'bg-emerald-950/20 border-emerald-500 text-emerald-300' : 'bg-[#0e0e14] border-white/[0.04] text-zinc-500'}`}>
-                <span className="block font-bold">Context</span>
-                <span className="text-[7px] opacity-75">Retrievals</span>
-              </div>
+              <RAGNode 
+                label="Context" 
+                sublabel="Grounding" 
+                activeSteps={['generating', 'done']} 
+                ragStep={ragStep} 
+                widthClass="w-[62px] min-w-[62px]" 
+              />
 
               {/* Node 6: Groq LLM */}
-              <div className={`w-14 text-center z-10 p-1.5 rounded border transition-all ${['generating', 'done'].includes(ragStep) ? 'bg-emerald-950/20 border-emerald-500 text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.2)]' : 'bg-[#0e0e14] border-white/[0.04] text-zinc-500'}`}>
-                <span className="block font-bold">Groq LLM</span>
-                <span className="text-[7px] opacity-75">Llama-70b</span>
-              </div>
+              <RAGNode 
+                label="Groq LLM" 
+                sublabel="Llama-70b" 
+                activeSteps={['generating', 'done']} 
+                ragStep={ragStep} 
+                widthClass="w-[68px] min-w-[68px]" 
+              />
 
             </div>
           </div>
         </div>
+
 
         {/* 3D Tilted Terminal Window */}
         <div 

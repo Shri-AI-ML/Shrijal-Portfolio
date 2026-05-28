@@ -78,8 +78,8 @@ const Layout = ({ children }) => {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.04] bg-[#07070a]/70 backdrop-blur-md shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span 
-              onClick={() => scrollToSection('hero')} 
+            <span
+              onClick={() => scrollToSection('hero')}
               className="text-base font-mono font-bold tracking-wider cursor-pointer flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
               <Cpu className="h-4 w-4 text-indigo-400" />
@@ -100,11 +100,10 @@ const Layout = ({ children }) => {
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className={`text-xs font-mono px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
-                  activeSection === item.id 
-                    ? 'bg-white/[0.05] text-white font-semibold shadow-inner' 
+                className={`text-xs font-mono px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${activeSection === item.id
+                    ? 'bg-white/[0.05] text-white font-semibold shadow-inner'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.01]'
-                }`}
+                  }`}
               >
                 /{item.label.toLowerCase()}
               </button>
@@ -113,7 +112,7 @@ const Layout = ({ children }) => {
 
           <div className="hidden md:flex items-center gap-3">
             <a
-              href="https://github.com/Shri-AI-ML"
+              href="https://github.com/ShrijalGoswami"
               target="_blank"
               rel="noopener noreferrer"
               className="p-1.5 text-zinc-400 hover:text-white transition-colors bg-white/[0.02] border border-white/[0.04] rounded-lg"
@@ -177,18 +176,17 @@ const Layout = ({ children }) => {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`block w-full text-left font-mono py-2.5 px-3 rounded-lg text-sm transition-all ${
-                    activeSection === item.id 
-                      ? 'text-indigo-400 bg-indigo-500/5 font-semibold' 
+                  className={`block w-full text-left font-mono py-2.5 px-3 rounded-lg text-sm transition-all ${activeSection === item.id
+                      ? 'text-indigo-400 bg-indigo-500/5 font-semibold'
                       : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
+                    }`}
                 >
                   /{item.label.toLowerCase()}
                 </button>
               ))}
               <div className="pt-4 border-t border-white/[0.04] flex justify-around">
                 <a
-                  href="https://github.com/Shri-AI-ML"
+                  href="https://github.com/ShrijalGoswami"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs text-zinc-400 hover:text-white"
@@ -226,8 +224,8 @@ const Layout = ({ children }) => {
             <div className="flex items-center gap-2 bg-white/[0.02] border border-white/[0.05] rounded-full py-1 px-4 text-xs font-mono">
               <span className="text-zinc-500 text-[10px]">HOST GATEWAY:</span>
               <span className="text-zinc-300 font-semibold">goswamivansh999@gmail.com</span>
-              <button 
-                onClick={handleCopyEmail} 
+              <button
+                onClick={handleCopyEmail}
                 className="ml-2 p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                 title="Copy Email"
                 aria-label="Copy Shrijal Goswami's Email Address to Clipboard"
